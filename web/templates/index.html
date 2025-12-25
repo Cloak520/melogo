@@ -26,6 +26,225 @@
             max-width: 1600px;
             margin: 0 auto;
         }
+        
+        /* Queue Section */
+        .queue-section {
+            width: 320px;
+            height: 100%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-xl);
+            overflow: hidden;
+        }
+        
+        .queue-section.collapsed {
+            width: 60px;
+            padding: 10px;
+        }
+        
+        .queue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        
+        .queue-section.collapsed .queue-header {
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+        }
+        
+        .queue-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .queue-section.collapsed .queue-title {
+            display: none;
+        }
+        
+        .queue-controls {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .queue-controls button {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 5px;
+            border-radius: var(--radius-md);
+            transition: all 0.2s;
+        }
+        
+        .queue-controls button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+        
+        .queue-section.collapsed .queue-controls {
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .queue-toggle-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 5px;
+            border-radius: var(--radius-md);
+            transition: all 0.2s;
+            margin-left: auto;
+        }
+        
+        .queue-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+        
+        .queue-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .queue-section.collapsed .queue-content {
+            display: none;
+        }
+        
+        .queue-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .queue-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .queue-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+        
+        .queue-content::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .queue-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+        }
+        
+        .queue-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .queue-item.active {
+            background: rgba(var(--primary-color-rgb), 0.2);
+            border: 1px solid rgba(var(--primary-color-rgb), 0.4);
+        }
+        
+        .queue-section.collapsed .queue-item {
+            display: none;
+        }
+        
+        .queue-item-index {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            width: 16px;
+            text-align: center;
+        }
+        
+        .queue-item.active .queue-item-index {
+            color: var(--primary-color);
+        }
+        
+        .queue-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .queue-item-title {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .queue-item-artist {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .queue-item-duration {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        
+        .queue-item-remove {
+            background: transparent;
+            border: none;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            padding: 5px;
+            border-radius: var(--radius-sm);
+            opacity: 0.5;
+            transition: all 0.2s;
+        }
+        
+        .queue-item:hover .queue-item-remove {
+            opacity: 1;
+        }
+        
+        .queue-item-remove:hover {
+            color: var(--danger-color);
+        }
+        
+        .empty-queue {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-tertiary);
+            text-align: center;
+        }
+        
+        .empty-queue i {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        .empty-queue-text {
+            font-size: 0.9rem;
+        }
+        
+        .queue-section.collapsed .empty-queue {
+            display: none;
+        }
         /* Context Menu */
         .context-menu {
             position: absolute;
@@ -91,82 +310,110 @@
     </div>
 
     <!-- Main Container -->
-    <div class="main-container">
-        <!-- Left Player Section -->
-        <div class="player-section" style="height: 100%;">
-            <div class="album-cover" id="album-cover">
-                <img src="/assets/images/MeloGo.png" alt="MeloGo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-            </div>
-            <div class="song-info">
-                <div class="song-title" id="current-song-title">{{ call .T "select_song_to_play" }}</div>
-                <div class="song-artist" id="current-song-artist">MeloGo</div>
-            </div>
-            
-            <!-- Lyrics Container -->
-            <div class="lyrics-section" id="lyrics-container">
-                <div class="no-lyrics">{{ call .T "no_lyrics" }}</div>
-            </div>
+        <div class="main-container">
+            <!-- Left Player Section -->
+            <div class="player-section" style="height: 100%;">
+                <div class="album-cover" id="album-cover">
+                    <img src="/assets/images/MeloGo.png" alt="MeloGo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                </div>
+                <div class="song-info">
+                    <div class="song-title" id="current-song-title">{{ call .T "select_song_to_play" }}</div>
+                    <div class="song-artist" id="current-song-artist">MeloGo</div>
+                </div>
+                
+                <!-- Lyrics Container -->
+                <div class="lyrics-section" id="lyrics-container">
+                    <div class="no-lyrics">{{ call .T "no_lyrics" }}</div>
+                </div>
 
-            <div class="progress-section" style="margin-top: auto;">
-                <div class="progress-bar-custom" id="progress-bar">
-                    <div class="progress-bar-fill" id="progress-fill"></div>
+                <div class="progress-section" style="margin-top: auto;">
+                    <div class="progress-bar-custom" id="progress-bar">
+                        <div class="progress-bar-fill" id="progress-fill"></div>
+                    </div>
+                    <div class="time-info">
+                        <span id="current-time">0:00</span>
+                        <span id="total-time">0:00</span>
+                    </div>
                 </div>
-                <div class="time-info">
-                    <span id="current-time">0:00</span>
-                    <span id="total-time">0:00</span>
-                </div>
-            </div>
 
-            <div class="controls">
-                <button class="repeat-mode-btn" id="repeat-mode-btn" onclick="toggleRepeatMode()">
-                    <i class="fas fa-redo" id="repeat-mode-icon"></i>
-                </button>
-                <button class="control-btn" onclick="previousSong()">
-                    <i class="fas fa-step-backward"></i>
-                </button>
-                <div class="play-btn" id="play-btn" onclick="togglePlay()">
-                    <i class="fas fa-play" id="play-icon"></i>
+                <div class="controls">
+                    <button class="repeat-mode-btn" id="repeat-mode-btn" onclick="toggleRepeatMode()">
+                        <i class="fas fa-redo" id="repeat-mode-icon"></i>
+                    </button>
+                    <button class="control-btn" onclick="previousSong()">
+                        <i class="fas fa-step-backward"></i>
+                    </button>
+                    <div class="play-btn" id="play-btn" onclick="togglePlay()">
+                        <i class="fas fa-play" id="play-icon"></i>
+                    </div>
+                    <button class="control-btn" onclick="nextSong()">
+                        <i class="fas fa-step-forward"></i>
+                    </button>
+                    <button class="stop-btn" onclick="stopPlayer()">
+                        <i class="fas fa-stop"></i>
+                    </button>
                 </div>
-                <button class="control-btn" onclick="nextSong()">
-                    <i class="fas fa-step-forward"></i>
-                </button>
-                <button class="stop-btn" onclick="stopPlayer()">
-                    <i class="fas fa-stop"></i>
-                </button>
-            </div>
-            <div class="volume-section">
-                <i class="fas fa-volume-up" id="volume-icon" style="color: #666; cursor: pointer; width: 20px;"></i>
-                <div class="volume-slider" id="volume-slider">
-                    <div id="volume-fill" style="height: 100%; background: var(--primary-color); width: 80%; border-radius: 2px;"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Right Music List Section -->
-        <div class="music-list-section">
-            <div class="list-header">
-                <div style="display: none;">
-                    <h2 id="list-title" style="margin-bottom: 0;"><i class="fas fa-list"></i> {{ call .T "all_music" }}</h2>
-                    <small id="list-subtitle" class="text-muted" style="display: none;"></small>
-                </div>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <select id="playlist-selector">
-                        <option value="all">{{ call .T "all_music" }}</option>
-                    </select>
-                    <div class="search-box">
-                        <input type="text" placeholder="{{ call .T "search_songs_placeholder" }}" id="search-input">
-                        <i class="fas fa-search"></i>
+                <div class="volume-section">
+                    <i class="fas fa-volume-up" id="volume-icon" style="color: #666; cursor: pointer; width: 20px;"></i>
+                    <div class="volume-slider" id="volume-slider">
+                        <div id="volume-fill" style="height: 100%; background: var(--primary-color); width: 80%; border-radius: 2px;"></div>
                     </div>
                 </div>
             </div>
-            <div class="music-list" id="music-list">
-                <div class="loading">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <p>{{ call .T "loading" }}...</p>
+
+            <!-- Right Music List Section -->
+            <div class="music-list-section">
+                <div class="list-header">
+                    <div style="display: none;">
+                        <h2 id="list-title" style="margin-bottom: 0;"><i class="fas fa-list"></i> {{ call .T "all_music" }}</h2>
+                        <small id="list-subtitle" class="text-muted" style="display: none;"></small>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <select id="playlist-selector">
+                            <option value="all">{{ call .T "all_music" }}</option>
+                        </select>
+                        <div class="search-box">
+                            <input type="text" placeholder="{{ call .T "search_songs_placeholder" }}" id="search-input">
+                            <i class="fas fa-search"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="music-list" id="music-list">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>{{ call .T "loading" }}...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Play Queue Section -->
+            <div class="queue-section" id="queue-section">
+                <div class="queue-header">
+                    <div class="queue-title">
+                        <i class="fas fa-list-ol"></i>
+                        <span>{{ call .T "play_queue" }}</span>
+                        <span id="queue-count" style="color: var(--text-secondary); font-size: 0.9rem; font-weight: normal;">(0)</span>
+                    </div>
+                    <div class="queue-controls">
+                        <button onclick="sortQueue()" title="{{ call .T "sort_queue" }}">
+                            <i class="fas fa-sort"></i>
+                        </button>
+                        <button onclick="clearQueue()" title="{{ call .T "clear_queue" }}">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                        <button onclick="toggleQueueCollapse()" title="{{ call .T "toggle_queue" }}">
+                            <i class="fas fa-chevron-left" id="queue-toggle-icon"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="queue-content" id="queue-content">
+                    <div class="empty-queue">
+                        <i class="fas fa-list-ol"></i>
+                        <div class="empty-queue-text">{{ call .T "no_songs_in_queue" }}</div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
     <!-- Hidden Audio Element -->
     <audio id="audio-player" style="display: none;"></audio>
@@ -207,6 +454,11 @@
         let currentPlaylistId = 'all';
         const audioPlayer = document.getElementById('audio-player');
         
+        // Play queue variables
+        let playQueue = [];
+        let currentQueueIndex = -1;
+        let isQueueActive = false; // Whether we're currently playing from queue
+        
 
         // Check login status
         const token = localStorage.getItem('token');
@@ -219,6 +471,183 @@
             checkAdminStatus();
             loadPlaylists();
             loadSongs();
+            loadQueue(); // Load queue from localStorage
+        }
+        
+        // Queue Management Functions
+        
+        // Save queue to localStorage
+        function saveQueue() {
+            const queueData = {
+                playQueue: playQueue,
+                currentQueueIndex: currentQueueIndex,
+                isQueueActive: isQueueActive
+            };
+            localStorage.setItem('playQueue', JSON.stringify(queueData));
+        }
+        
+        // Load queue from localStorage
+        function loadQueue() {
+            const queueDataStr = localStorage.getItem('playQueue');
+            if (queueDataStr) {
+                try {
+                    const queueData = JSON.parse(queueDataStr);
+                    playQueue = queueData.playQueue || [];
+                    currentQueueIndex = queueData.currentQueueIndex || -1;
+                    isQueueActive = queueData.isQueueActive || false;
+                    renderQueue();
+                } catch (error) {
+                    console.error('Error loading queue:', error);
+                    clearQueue();
+                }
+            }
+        }
+        
+        // Add song to queue
+        function addToQueue(song, playNow = false) {
+            const existingIndex = playQueue.findIndex(item => item.id === song.id);
+            if (existingIndex === -1) {
+                playQueue.push({ ...song });
+                renderQueue();
+                saveQueue();
+                
+                if (playNow || playQueue.length === 1) {
+                    playQueueSong(playQueue.length - 1);
+                }
+            }
+        }
+        
+        // Remove song from queue
+        function removeFromQueue(index) {
+            if (index >= 0 && index < playQueue.length) {
+                playQueue.splice(index, 1);
+                
+                // Adjust current index if removed song was before current position
+                if (index < currentQueueIndex) {
+                    currentQueueIndex--;
+                } else if (index === currentQueueIndex) {
+                    // If we removed the currently playing song, move to next
+                    if (currentQueueIndex >= playQueue.length) {
+                        currentQueueIndex = playQueue.length - 1;
+                    }
+                }
+                
+                renderQueue();
+                saveQueue();
+            }
+        }
+        
+        // Clear the entire queue
+        function clearQueue() {
+            playQueue = [];
+            currentQueueIndex = -1;
+            isQueueActive = false;
+            renderQueue();
+            saveQueue();
+        }
+
+        // Sort queue alphabetically by title
+        function sortQueue() {
+            if (playQueue.length <= 1) return;
+
+            // Get the currently playing song
+            const currentSong = currentQueueIndex >= 0 ? playQueue[currentQueueIndex] : null;
+
+            // Sort the queue by title
+            playQueue.sort((a, b) => a.title.localeCompare(b.title));
+
+            // Update currentQueueIndex if a song was playing
+            if (currentSong) {
+                currentQueueIndex = playQueue.findIndex(song => song.id === currentSong.id);
+            }
+
+            renderQueue();
+            saveQueue();
+        }
+        
+        // Render queue to UI
+        function renderQueue() {
+            const queueContent = document.getElementById('queue-content');
+            const queueCount = document.getElementById('queue-count');
+            
+            queueCount.textContent = `(${playQueue.length})`;
+            
+            if (playQueue.length === 0) {
+                queueContent.innerHTML = `
+                    <div class="empty-queue">
+                        <i class="fas fa-list-ol"></i>
+                        <div class="empty-queue-text">${t('no_songs_in_queue')}</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            queueContent.innerHTML = playQueue.map((song, index) => {
+                return `
+                    <div class="queue-item ${index === currentQueueIndex ? 'active' : ''}" 
+                         onclick="playQueueSong(${index})">
+                        <div class="queue-item-index">${index + 1}</div>
+                        <div class="queue-item-info">
+                            <div class="queue-item-title">${song.title}</div>
+                            <div class="queue-item-artist">${song.artist}</div>
+                        </div>
+                        <div class="queue-item-duration">${formatDuration(song.duration)}</div>
+                        <button class="queue-item-remove" onclick="event.stopPropagation(); removeFromQueue(${index})">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Toggle queue collapse/expand
+        function toggleQueueCollapse() {
+            const queueSection = document.getElementById('queue-section');
+            const toggleIcon = document.getElementById('queue-toggle-icon');
+            
+            queueSection.classList.toggle('collapsed');
+            
+            if (queueSection.classList.contains('collapsed')) {
+                toggleIcon.className = 'fas fa-chevron-right';
+            } else {
+                toggleIcon.className = 'fas fa-chevron-left';
+            }
+        }
+        
+        // Play song from queue
+        function playQueueSong(index) {
+            if (index < 0 || index >= playQueue.length) return;
+            
+            currentQueueIndex = index;
+            isQueueActive = true;
+            const song = playQueue[index];
+            
+            // Update song info display
+            document.getElementById('current-song-title').textContent = song.title;
+            document.getElementById('current-song-artist').textContent = song.artist;
+            
+            // Update album cover
+            updateAlbumCover(song);
+            
+            // Load lyrics
+            loadLyrics(song.id);
+            
+            // Play the song
+            audioPlayer.src = `/api/v1/songs/${song.id}/stream`;
+            
+            // Reset rotation before starting new song
+            const albumCover = document.getElementById('album-cover');
+            albumCover.classList.remove('rotating', 'paused');
+            void albumCover.offsetWidth;
+            
+            audioPlayer.play();
+            isPlaying = true;
+            
+            document.getElementById('play-icon').className = 'fas fa-pause';
+            startRotation();
+            renderMusicList();
+            renderQueue();
+            saveQueue();
         }
         
         // Check if user is admin
@@ -619,20 +1048,24 @@
         function togglePlay() {
             const albumCover = document.getElementById('album-cover');
             
-            if (currentSongIndex === -1 && songs.length > 0) {
+            if ((currentSongIndex === -1 && !isQueueActive) && songs.length > 0) {
+                // No song playing and queue not active - play first song or random
                 if (currentRepeatMode === REPEAT_MODE.RANDOM) {
-                    // 在随机模式下，播放随机歌曲
                     playRandomSong();
                 } else {
-                    // 在其他模式下，播放第一首歌曲
                     playSong(0);
                 }
+            } else if (isQueueActive && playQueue.length > 0 && currentQueueIndex === -1) {
+                // Queue is active but no song is playing - play first song in queue
+                playQueueSong(0);
             } else if (isPlaying) {
+                // Pause regardless of queue status
                 audioPlayer.pause();
                 isPlaying = false;
                 document.getElementById('play-icon').className = 'fas fa-play';
                 pauseRotation();
             } else {
+                // Play regardless of queue status
                 audioPlayer.play();
                 isPlaying = true;
                 document.getElementById('play-icon').className = 'fas fa-pause';
@@ -642,25 +1075,45 @@
 
         // Previous/Next song
         function previousSong() {
-            if (currentRepeatMode === REPEAT_MODE.RANDOM) {
-                // 在随机模式下，播放随机歌曲
-                playRandomSong();
+            if (isQueueActive && playQueue.length > 0) {
+                // Use queue if active
+                let prevIndex;
+                if (currentQueueIndex > 0) {
+                    prevIndex = currentQueueIndex - 1;
+                } else {
+                    prevIndex = playQueue.length - 1;
+                }
+                playQueueSong(prevIndex);
             } else {
-                // 在其他模式下，播放上一首
-                if (currentSongIndex > 0) {
-                    playSong(currentSongIndex - 1);
+                // Original behavior when queue is not active
+                if (currentRepeatMode === REPEAT_MODE.RANDOM) {
+                    playRandomSong();
+                } else {
+                    if (currentSongIndex > 0) {
+                        playSong(currentSongIndex - 1);
+                    }
                 }
             }
         }
 
         function nextSong() {
-            if (currentRepeatMode === REPEAT_MODE.RANDOM) {
-                // 在随机模式下，播放随机歌曲
-                playRandomSong();
+            if (isQueueActive && playQueue.length > 0) {
+                // Use queue if active
+                let nextIndex;
+                if (currentQueueIndex < playQueue.length - 1) {
+                    nextIndex = currentQueueIndex + 1;
+                } else {
+                    nextIndex = 0;
+                }
+                playQueueSong(nextIndex);
             } else {
-                // 在其他模式下，播放下一首
-                if (currentSongIndex < songs.length - 1) {
-                    playSong(currentSongIndex + 1);
+                // Original behavior when queue is not active
+                if (currentRepeatMode === REPEAT_MODE.RANDOM) {
+                    playRandomSong();
+                } else {
+                    if (currentSongIndex < songs.length - 1) {
+                        playSong(currentSongIndex + 1);
+                    }
                 }
             }
         }
@@ -988,6 +1441,29 @@
             document.getElementById('context-menu').style.display = 'none';
         });
 
+        // Get song object by ID
+        function getSongById(songId) {
+            return songs.find(song => song.id === songId);
+        }
+
+        // Add song to queue from context menu
+        function addToQueueFromMenu(playNext = false) {
+            const song = getSongById(contextSongId);
+            if (song) {
+                if (playNext) {
+                    // Play next: insert after current position in queue
+                    const insertIndex = currentQueueIndex + 1;
+                    playQueue.splice(insertIndex, 0, { ...song });
+                    currentQueueIndex++;
+                } else {
+                    // Add to end
+                    addToQueue(song, false);
+                }
+                renderQueue();
+                saveQueue();
+            }
+        }
+
         function showContextMenu(e, songId) {
             e.preventDefault();
             contextSongId = songId;
@@ -998,6 +1474,12 @@
             let html = `
                 <li onclick="openAddToPlaylistModal()">
                     <i class="fas fa-plus-circle"></i> ${t('add_to_playlist')}
+                </li>
+                <li onclick="addToQueueFromMenu()">
+                    <i class="fas fa-list-plus"></i> ${t('add_to_queue')}
+                </li>
+                <li onclick="addToQueueFromMenu(true)">
+                    <i class="fas fa-play-circle"></i> ${t('play_next_in_queue')}
                 </li>
             `;
             
