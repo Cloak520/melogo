@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    {{ template "head.html" . }}
+</head>
+<body>
+    <!-- Banner -->
+    <div class="banner">
+        <div class="container-fluid px-4">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h1><i class="fas fa-music"></i> {{ call .T "app_name" }}</h1>
+                </div>
+                <div class="col-md-6 user-info">
+                    <a href="/" class="btn-header">
+                        <i class="fas fa-home"></i> {{ call .T "back_to_home" }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container py-5">
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <h4 class="mb-0" style="color: var(--text-secondary); font-weight: 600;">{{ call .T "total_playlists" (dict "Count" 0) }}</h4>
+            <button class="btn-primary-custom" data-toggle="modal" data-target="#createPlaylistModal">
+                <i class="fas fa-plus"></i> {{ call .T "new_playlist" }}
+            </button>
+        </div>
+
+        <div id="playlists-container">
+            <div class="text-center" style="padding: 50px;">
+                <i class="fas fa-spinner fa-spin fa-3x text-muted"></i>
+                <p class="mt-3 text-muted">{{ call .T "loading" }}...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Playlist Modal -->
+    <div class="modal fade" id="createPlaylistModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content card-custom">
+                <div class="modal-header border-0 pb-0 pt-4 px-4">
+                    <h5 class="modal-title" style="font-size: 1.5rem;"><i class="fas fa-plus-circle text-primary"></i> {{ call .T "new_playlist" }}</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body px-4 py-4">
+                    <div class="form-group mb-4">
+                        <label for="playlistName" class="font-weight-600 mb-2">{{ call .T "playlist_name" }} *</label>
+                        <input type="text" class="form-control form-control-custom" id="playlistName" placeholder="{{ call .T "enter_name" }}">
+                    </div>
+                    <div class="form-group mb-0">
+                        <label for="playlistPrivacy" class="font-weight-600 mb-2">{{ call .T "privacy_settings" }}</label>
+                        <select class="form-control form-control-custom custom-select-style" id="playlistPrivacy">
+                            <option value="false">{{ call .T "private" }}</option>
+                            <option value="true">{{ call .T "public" }}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4">
+                    <button type="button" class="btn-custom btn-secondary-custom" data-dismiss="modal">{{ call .T "cancel" }}</button>
+                    <button type="button" class="btn-primary-custom" onclick="createPlaylist()">{{ call .T "create" }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Playlist Modal -->
+    <div class="modal fade" id="editPlaylistModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content card-custom">
+                <div class="modal-header border-0 pb-0 pt-4 px-4">
+                    <h5 class="modal-title" style="font-size: 1.5rem;"><i class="fas fa-edit text-primary"></i> {{ call .T "edit_playlist" }}</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editPlaylistId">
+                    <div class="form-group">
+                        <label for="editPlaylistName">{{ call .T "playlist_name" }} *</label>
+                        <input type="text" class="form-control form-control-custom" id="editPlaylistName" placeholder="{{ call .T "enter_name" }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="editPlaylistPrivacy">{{ call .T "privacy_settings" }}</label>
+                        <select class="form-control form-control-custom custom-select-style" id="editPlaylistPrivacy">
+                            <option value="false">{{ call .T "private" }}</option>
+                            <option value="true">{{ call .T "public" }}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-custom btn-secondary-custom" data-dismiss="modal">{{ call .T "cancel" }}</button>
+                    <button type="button" class="btn btn-custom btn-primary-custom" onclick="updatePlaylist()">{{ call .T "save" }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{ template "scripts.html" . }}
+    <script>
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+            window.location.href = '/login';
+        }
+
+        // Load playlists
+        function loadPlaylists() {
+            fetch('/api/v1/playlists', {
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                renderPlaylists(data.playlists || []);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMessage(t('load_failed'), 'danger');
+            });
+        }
+
+        // Render playlists
+        function renderPlaylists(playlists) {
+            const container = document.getElementById('playlists-container');
+
+            if (playlists.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-music"></i>
+                        <p>${t('no_playlists')}</p>
+                        <button class="btn btn-custom btn-primary-custom mt-3" data-toggle="modal" data-target="#createPlaylistModal">
+                            <i class="fas fa-plus"></i> ${t('create_first_playlist')}
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = playlists.map(playlist => `
+                <div class="card-custom mb-3 p-4" style="cursor: pointer; transition: all 0.2s;" onclick="viewPlaylist(${playlist.id})">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded mr-4 d-flex align-items-center justify-content-center text-white" style="width: 80px; height: 80px; background: var(--primary-color); font-size: 2rem; border-radius: var(--radius-md) !important;">
+                            <i class="fas fa-list"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="h5 mb-1 text-dark font-weight-bold">${playlist.name}</div>
+                            <div class="text-secondary small">
+                                <span class="mr-3"><i class="fas fa-music"></i> ${t('songs_count', {Count: playlist.song_count})}</span>
+                                <span class="mr-3">${playlist.is_public ? '<i class="fas fa-globe"></i> ' + t('public') : '<i class="fas fa-lock"></i> ' + t('private')}</span>
+                                <span><i class="fas fa-calendar-alt"></i> ${formatDate(playlist.created_at)}</span>
+                            </div>
+                        </div>
+                        <div class="actions" onclick="event.stopPropagation()">
+                            <button class="btn-custom btn-secondary-custom btn-sm mr-2" onclick="editPlaylist(${playlist.id}, '${playlist.name}', ${playlist.is_public})">
+                                <i class="fas fa-edit"></i> {{ call .T "edit" }}
+                            </button>
+                            <button class="btn-custom btn-danger-custom btn-sm" onclick="deletePlaylist(${playlist.id})">
+                                <i class="fas fa-trash"></i> {{ call .T "delete" }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Create playlist
+        function createPlaylist() {
+            const name = document.getElementById('playlistName').value.trim();
+            const isPublic = document.getElementById('playlistPrivacy').value === 'true';
+
+            if (!name) {
+                showMessage(t('enter_name'), 'danger');
+                return;
+            }
+
+            fetch('/api/v1/playlists', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ name, is_public: isPublic })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    $('#createPlaylistModal').modal('hide');
+                    document.getElementById('playlistName').value = '';
+                    loadPlaylists();
+                } else {
+                    showMessage(data.error || t('create_failed'), 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMessage(t('create_failed'), 'danger');
+            });
+        }
+
+        // Edit playlist
+        function editPlaylist(id, name, isPublic) {
+            document.getElementById('editPlaylistId').value = id;
+            document.getElementById('editPlaylistName').value = name;
+            document.getElementById('editPlaylistPrivacy').value = isPublic ? 'true' : 'false';
+            $('#editPlaylistModal').modal('show');
+        }
+
+        // Update playlist
+        function updatePlaylist() {
+            const id = document.getElementById('editPlaylistId').value;
+            const name = document.getElementById('editPlaylistName').value.trim();
+            const isPublic = document.getElementById('editPlaylistPrivacy').value === 'true';
+
+            if (!name) {
+                showMessage(t('enter_name'), 'danger');
+                return;
+            }
+
+            fetch(`/api/v1/playlists/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ name, is_public: isPublic })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    $('#editPlaylistModal').modal('hide');
+                    loadPlaylists();
+                } else {
+                    showMessage(data.error || t('update_failed'), 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMessage(t('update_failed'), 'danger');
+            });
+        }
+
+        // Delete playlist
+        async function deletePlaylist(id) {
+            const confirmed = await showConfirm(t('delete_confirm'));
+            if (!confirmed) {
+                return;
+            }
+
+            fetch(`/api/v1/playlists/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    loadPlaylists();
+                } else {
+                    showMessage(data.error || t('delete_failed'), 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMessage(t('delete_failed'), 'danger');
+            });
+        }
+
+        // View playlist
+        function viewPlaylist(id) {
+            window.location.href = `/playlist/${id}`;
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('{{ .CurrentLang }}' === 'en' ? 'en-US' : 'zh-CN');
+        }
+
+        // Load on page load
+        document.addEventListener('DOMContentLoaded', loadPlaylists);
+    </script>
+</body>
+</html>

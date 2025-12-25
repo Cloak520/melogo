@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    {{ template "head.html" . }}
+    <style>
+        .login-container {
+            max-width: 500px;
+            width: 100%;
+            padding: 24px;
+        }
+    </style>
+</head>
+<body class="auth-page">
+    <div class="login-container d-flex align-items-center justify-content-center" style="min-height: 100vh;">
+        <div class="login-card" style="width: 100%;">
+            <div class="login-header">
+                <div class="brand-logo">
+                    <i class="fas fa-music"></i>
+                </div>
+                <h2>{{ call .T "welcome_back" }}</h2>
+                <p>{{ call .T "login_to_melogo" }}</p>
+            </div>
+            <div class="login-body">
+                <div id="alert-container"></div>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="username"><i class="fas fa-user mr-2"></i> {{ call .T "username" }}</label>
+                        <input type="text" class="form-control form-control-custom" id="username" name="username" 
+                               placeholder="{{ call .T "username" }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password"><i class="fas fa-lock mr-2"></i> {{ call .T "password" }}</label>
+                        <input type="password" class="form-control form-control-custom" id="password" name="password" 
+                               placeholder="{{ call .T "password" }}" required>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="remember">
+                        <label class="form-check-label" for="remember">{{ call .T "remember_me" }}</label>
+                    </div>
+                    <button type="submit" class="btn-primary-custom w-100 py-3">
+                        <i class="fas fa-sign-in-alt mr-2"></i> {{ call .T "login" }}
+                    </button>
+                </form>
+                <div class="login-footer">
+                    {{ if .allow_registration }}
+                    <p class="mb-0">{{ call .T "no_account" }} <a href="/register">{{ call .T "register_now" }}</a></p>
+                    {{ else }}
+                    <p class="text-muted small mb-0">{{ call .T "registration_closed" }}</p>
+                    {{ end }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{ template "scripts.html" . }}
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('login-form');
+        const alertContainer = document.getElementById('alert-container');
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            // Get form data
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!username || !password) {
+                showAlert(t('enter_username_password'), 'danger');
+                return;
+            }
+
+            // Submit login request
+            try {
+                const response = await fetch('/api/v1/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Save token to localStorage
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('username', data.user.username);
+                    
+                    showAlert(t('login_success_redirect'), 'success');
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1000);
+                } else {
+                    showAlert(data.error || t('login_failed'), 'danger');
+                }
+            } catch (error) {
+                showAlert(t('network_error'), 'danger');
+                console.error('Error:', error);
+            }
+        });
+
+        function showAlert(message, type) {
+            // Use the common UI function
+            showMessage(message, type);
+        }
+    });
+    </script>
+</body>
+</html>

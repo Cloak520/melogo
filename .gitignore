@@ -1,0 +1,9 @@
+.vscode
+
+__debug_*
+
+data/*.db
+
+music/*
+
+melogo

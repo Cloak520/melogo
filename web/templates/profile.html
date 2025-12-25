@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    {{ template "head.html" . }}
+</head>
+<body>
+    <!-- Banner -->
+    <div class="banner">
+        <div class="container-fluid px-4">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h1><i class="fas fa-user-cog"></i> {{ call .T "profile_settings" }}</h1>
+                </div>
+                <div class="col-md-6 user-info">
+                    <a href="/" class="btn-header">
+                        <i class="fas fa-home"></i> {{ call .T "back_to_home" }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container py-5" style="max-width: 700px;">
+        <div class="card-custom">
+            <div class="card-body p-5">
+                <div class="avatar-section d-flex flex-column align-items-center mb-5">
+                    <div class="avatar-container">
+                        <img id="avatar-preview" src="/assets/images/default-avatar.png" alt="{{ call .T "avatar" }}" 
+                             class="avatar-image">
+                    </div>
+                    <h3 id="username-display" class="mb-1 font-weight-bold">Loading...</h3>
+                    <p id="email-display" class="text-secondary small">...</p>
+                </div>
+
+                <form id="profile-form">
+                    <div class="form-group mb-4">
+                        <label for="username" class="font-weight-600 mb-2 text-secondary">{{ call .T "username" }}</label>
+                        <input type="text" class="form-control form-control-custom bg-light" id="username" disabled>
+                        <small class="form-text text-muted mt-2"><i class="fas fa-info-circle"></i> {{ call .T "not_editable" }}</small>
+                    </div>
+                    
+                    <div class="form-group mb-4">
+                        <label for="email" class="font-weight-600 mb-2 text-secondary">{{ call .T "email_address" }}</label>
+                        <input type="email" class="form-control form-control-custom" id="email" required>
+                    </div>
+
+                    <div class="form-group mb-5">
+                        <label for="avatar" class="font-weight-600 mb-2" style="color: var(--text-secondary);">{{ call .T "avatar" }}</label>
+                        <div class="custom-file-upload" id="file-upload-area" onclick="document.getElementById('avatar').click();">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <div class="upload-text">{{ call .T "click_to_upload" }}</div>
+                            <div class="upload-hint">{{ call .T "or_drag_drop" }}</div>
+                            <div class="upload-hint">{{ call .T "support_formats" }}</div>
+                            <input type="file" class="custom-file-input" id="avatar" accept="image/*" onchange="previewAvatar(this)" style="display: none;">
+                        </div>
+                        <div class="file-info" id="file-info"></div>
+                    </div>
+
+                    <div class="d-flex flex-column gap-3">
+                        <button type="submit" class="btn-primary-custom w-100 mb-3">
+                            <i class="fas fa-save mr-2"></i> {{ call .T "save_changes" }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{ template "scripts.html" . }}
+    <script>
+        // Check auth
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login';
+        }
+
+        // Load profile
+        loadProfile();
+
+        function loadProfile() {
+            fetch('/api/v1/user/profile', {
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Unauth');
+                return response.json();
+            })
+            .then(data => {
+                const user = data;
+                document.getElementById('username').value = user.username;
+                document.getElementById('email').value = user.email;
+                
+                document.getElementById('username-display').textContent = user.username;
+                document.getElementById('email-display').textContent = user.email;
+                
+                if (user.avatar) {
+                    // Append timestamp to avoid caching
+                    document.getElementById('avatar-preview').src = user.avatar + '?t=' + new Date().getTime();
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                // logout();
+            });
+        }
+
+        function previewAvatar(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('avatar-preview').src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+                
+                // Update file info
+                document.getElementById('file-info').textContent = input.files[0].name;
+            }
+        }
+        
+        // Drag and drop functionality
+        const fileUploadArea = document.getElementById('file-upload-area');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileUploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileUploadArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileUploadArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight(e) {
+            fileUploadArea.classList.add('drag-over');
+        }
+        
+        function unhighlight(e) {
+            fileUploadArea.classList.remove('drag-over');
+        }
+        
+        fileUploadArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+        
+        function handleFiles(files) {
+            if (files.length) {
+                const file = files[0];
+                // Check if file is an image
+                if (!file.type.match('image.*')) {
+                    showAlert(t('please_select_image'), 'danger');
+                    return;
+                }
+                
+                const avatarInput = document.getElementById('avatar');
+                // Create a DataTransfer object to set the files property
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                avatarInput.files = dataTransfer.files;
+                
+                // Update preview
+                previewAvatar(avatarInput);
+            }
+        }
+
+        // Handle form submit
+        document.getElementById('profile-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const avatarInput = document.getElementById('avatar');
+            
+            const formData = new FormData();
+            formData.append('email', email);
+            
+            if (avatarInput.files.length > 0) {
+                formData.append('avatar_file', avatarInput.files[0]);
+            }
+
+            fetch('/api/v1/user/profile', {
+                method: 'PUT',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                    // Content-Type not set, let browser set it with boundary
+                },
+                body: formData
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (response.ok) {
+                    showAlert(t('update_success'), 'success');
+                    loadProfile(); 
+                } else {
+                    showAlert(data.error || t('update_failed'), 'danger');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showAlert(t('update_failed') + ', ' + t('retry_message'), 'danger');
+            });
+        });
+    </script>
+</body>
+</html>

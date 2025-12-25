@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    {{ template "head.html" . }}
+    <style>
+        .register-container {
+            max-width: 500px;
+            width: 100%;
+            padding: 24px;
+        }
+    </style>
+</head>
+<body class="auth-page">
+    <div class="register-container d-flex align-items-center justify-content-center" style="min-height: 100vh;">
+        <div class="register-card" style="width: 100%;">
+            <div class="register-header">
+                <div class="brand-logo">
+                    <i class="fas fa-music"></i>
+                </div>
+                <h2>{{ call .T "create_account" }}</h2>
+                <p class="text-secondary small mb-0">{{ call .T "join_melogo" }}</p>
+            </div>
+            <div class="register-body">
+                <div id="alert-container"></div>
+                
+                {{ if .allow_registration }}
+                <form id="register-form">
+                    <div class="form-group">
+                        <label for="username"><i class="fas fa-user mr-2"></i> {{ call .T "username" }} *</label>
+                        <input type="text" class="form-control form-control-custom" id="username" name="username" 
+                               placeholder="{{ call .T "username" }}" required minlength="3" maxlength="50">
+                        <small class="form-text text-muted">{{ call .T "username_length_hint" }}</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="email"><i class="fas fa-envelope mr-2"></i> {{ call .T "email_optional" }}</label>
+                        <input type="email" class="form-control form-control-custom" id="email" name="email" 
+                               placeholder="{{ call .T "email_optional" }}">
+                        <small class="form-text text-muted">{{ call .T "email_optional_hint" }}</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="password"><i class="fas fa-lock mr-2"></i> {{ call .T "password" }} *</label>
+                        <input type="password" class="form-control form-control-custom" id="password" name="password" 
+                               placeholder="{{ call .T "password" }}" required minlength="6">
+                        <small class="form-text text-muted">{{ call .T "password_length_hint" }}</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm-password"><i class="fas fa-lock mr-2"></i> {{ call .T "confirm_password" }} *</label>
+                        <input type="password" class="form-control form-control-custom" id="confirm-password" 
+                               placeholder="{{ call .T "confirm_password" }}" required>
+                    </div>
+                    <button type="submit" class="btn-primary-custom w-100 py-3">
+                        <i class="fas fa-user-plus mr-2"></i> {{ call .T "register" }}
+                    </button>
+                </form>
+                {{ else }}
+                <div class="text-center py-5">
+                    <i class="fas fa-ban fa-4x text-muted mb-3 opacity-05"></i>
+                    <h4 class="font-weight-700">{{ call .T "registration_closed" }}</h4>
+                    <p class="text-secondary">{{ call .T "registration_closed_hint" }}</p>
+                </div>
+                {{ end }}
+
+                <div class="register-footer">
+                    <p class="text-secondary mb-0">{{ call .T "already_have_account" }} <a href="/login">{{ call .T "login_now" }}</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{ template "scripts.html" . }}
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('register-form');
+        const alertContainer = document.getElementById('alert-container');
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+
+            if (username.length < 3 || username.length > 50) {
+                showAlert(t('username_length_hint'), 'danger');
+                return;
+            }
+
+            if (password.length < 6) {
+                showAlert(t('password_length_hint'), 'danger');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showAlert(t('passwords_not_match'), 'danger');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/v1/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        email: email,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showAlert(t('register_success_redirect'), 'success');
+                    setTimeout(() => {
+                        window.location.href = '/login';
+                    }, 1500);
+                } else {
+                    showAlert(data.error || t('register_failed'), 'danger');
+                }
+            } catch (error) {
+                showAlert(t('network_error'), 'danger');
+                console.error('Error:', error);
+            }
+        });
+
+        function showAlert(message, type) {
+            // Use the common UI function
+            showMessage(message, type);
+        }
+    });
+    </script>
+</body>
+</html>

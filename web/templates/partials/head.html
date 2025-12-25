@@ -1,0 +1,104 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+{{ if .title }}<title>{{ .title }}</title>{{ end }}
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="/assets/css/bootstrap.min.css">
+<!-- Font Awesome -->
+<link rel="stylesheet" href="/assets/css/all.min.css">
+<!-- Custom CSS -->
+<link rel="stylesheet" href="/assets/css/style.css">
+
+<style>
+    .lang-switcher {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9999;
+        background: white;
+        padding: 2px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        display: flex;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .lang-switcher a {
+        padding: 4px 10px;
+        font-size: 12px;
+        font-weight: 500;
+        border-radius: 3px;
+        text-decoration: none;
+        color: #666;
+        transition: all 0.2s;
+    }
+    .lang-switcher a:hover {
+        background: #f5f5f5;
+        color: #333;
+    }
+    .lang-switcher a.active {
+        background: #333;
+        color: white;
+    }
+</style>
+
+<div class="lang-switcher">
+    <a href="?lang=zh" class="{{ if eq .CurrentLang "zh" }}active{{ end }}">ZH</a>
+    <a href="?lang=en" class="{{ if eq .CurrentLang "en" }}active{{ end }}">EN</a>
+</div>
+
+<script>
+    window.Translations = {
+        "update_success": "{{ call .T `update_success` }}",
+        "update_failed": "{{ call .T `update_failed` }}",
+        "retry_message": "{{ call .T `retry_message` }}",
+        "confirm_remove_song": "{{ call .T `confirm_remove_song` }}",
+        "playlist_not_found": "{{ call .T `playlist_not_found` }}",
+        "load_failed": "{{ call .T `load_failed` }}",
+        "no_songs": "{{ call .T `no_songs` }}",
+        "add_songs": "{{ call .T `add_songs` }}",
+        "songs_count": "{{ call .T `songs_count` (dict `Count` 0) }}",
+        "private": "{{ call .T `private` }}",
+        "public": "{{ call .T `public` }}",
+        "enter_name": "{{ call .T `enter_name` }}",
+        "create_failed": "{{ call .T `create_failed` }}",
+        "update_failed_inner": "{{ call .T `update_failed` }}",
+        "delete_failed": "{{ call .T `delete_failed` }}",
+        "add_failed": "{{ call .T `add_failed` }}",
+        "remove_failed": "{{ call .T `remove_failed` }}",
+        "login_success_redirect": "{{ call .T `login_success_redirect` }}",
+        "login_failed": "{{ call .T `login_failed` }}",
+        "network_error": "{{ call .T `network_error` }}",
+        "register_success": "{{ call .T `register_success` }}",
+        "register_failed": "{{ call .T `register_failed` }}",
+        "passwords_not_match": "{{ call .T `passwords_not_match` }}",
+        "enter_username_password": "{{ call .T `enter_username_password` }}",
+        "username_length_hint": "{{ call .T `username_length_hint` }}",
+        "password_length_hint": "{{ call .T `password_length_hint` }}",
+        "register_success_redirect": "{{ call .T `register_success_redirect` }}",
+        "remove_from_list": "{{ call .T `remove_from_list` }}",
+        "confirm_remove_from_list": "{{ call .T `confirm_remove_from_list` }}",
+        "remove_success": "{{ call .T `remove_success` }}",
+        "go_create": "{{ call .T `go_create` }}",
+        "add_success": "{{ call .T `add_success` }}",
+        "email_optional_hint": "{{ call .T `email_optional_hint` }}",
+        "registration_closed": "{{ call .T `registration_closed` }}",
+        "registration_closed_hint": "{{ call .T `registration_closed_hint` }}",
+        "add_to_playlist": "{{ call .T `add_to_playlist` }}",
+        "delete_confirm": "{{ call .T `delete_confirm` }}",
+        "all_music": "{{ call .T `all_music` }}",
+        "stop": "{{ call .T `stop` }}",
+        "no_lyrics": "{{ call .T `no_lyrics` }}"
+    };
+    
+    function t(key, data) {
+        let msg = window.Translations[key] || key;
+        if (data) {
+            for (let k in data) {
+                // Use string concatenation to avoid Go template parser identifying these as actions
+                msg = msg.replace('{' + '{.' + k + '}' + '}', data[k]);
+                msg = msg.replace('{' + '{ .' + k + ' }' + '}', data[k]);
+            }
+        }
+        return msg;
+    }
+</script>

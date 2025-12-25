@@ -1,0 +1,81 @@
+name: Go
+
+on:
+  push:
+    tags: ["v*"]
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  BINARY_NAME: melogo
+  VERSION: 0.0.1
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }} (${{ matrix.goarch }})
+    # 根据目标平台自动选择 Runner
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+      fail-fast: false
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.25' # 使用稳定的 1.23
+        cache: true
+
+    - name: Build Binary
+      shell: bash
+      run: |
+        mkdir -p dist
+        # 开启 CGO，因为 SQLite 需要它
+        export CGO_ENABLED=1
+        export GOOS=${{ matrix.goos }}
+        export GOARCH=${{ matrix.goarch }}
+        
+        EXT=""
+        if [ "${{ matrix.goos }}" = "windows" ]; then EXT=".exe"; fi
+        
+        # 修复了之前可能导致语法错误的 ldflags 写法
+        go build -v -o dist/${{ env.BINARY_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${EXT} \
+          -ldflags="-s -w -X main.Version=${{ env.VERSION }}"
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.goos }}-${{ matrix.goarch }}-binaries
+        path: dist/*
+
+  create-release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: artifacts/**/*
+        generate_release_notes: true

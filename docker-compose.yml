@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  melogo:
+    image: soulcloak/melogo:latest
+    container_name: melogo
+    environment:
+      - SERVER_HOST=0.0.0.0  # 重要：允许外部访问
+      - SERVER_PORT=8080     # 端口
+      - DATABASE_PATH=./data/melogo.db # 数据存储文件
+      - MUSIC_DIRECTORY=./music # 音乐文件路径
+      - JWT_SECRET=melogo # JWT密钥，需修改为其他任意值
+      - ALLOW_REGISTRATION=true # 允许注册
+      - SERVER_DEBUG=false # 开始调试模式
+      - LYRICS_API_URL=https://api.lrc.cx # 刮削地址
+    ports:
+      - "8080:8080"          # 外部端口:容器内端口
+    volumes:
+      - ./data:/home/melogo/data  # 持久化数据库
+      - ./music:/home/melogo/music  # 挂载音乐目录
+    restart: unless-stopped

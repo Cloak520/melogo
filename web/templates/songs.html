@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    {{ template "head.html" . }}
+    <style>
+        /* Banner */
+        .banner h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--primary-color);
+        }
+        
+        .admin-container {
+            padding: 24px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        .admin-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            padding: 32px;
+            box-shadow: var(--shadow-xl);
+            margin-bottom: 24px;
+        }
+        
+        .admin-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .admin-actions {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        
+        .admin-search-box {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+        
+        .admin-search-box input {
+            background: var(--glass-bg);
+            border: 2px solid rgba(203, 213, 225, 0.2);
+            padding: 12px 20px 12px 44px;
+            border-radius: var(--radius-full);
+            width: 100%;
+            font-weight: 500;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+        
+        .admin-search-box i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+        
+        .admin-search-box input:focus {
+            background: var(--glass-bg);
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.3);
+            color: var(--text-primary);
+        }
+        
+        .song-table-container {
+            overflow-x: auto;
+        }
+        
+        .song-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+        
+        .song-table th,
+        .song-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(203, 213, 225, 0.1);
+        }
+        
+        .song-table th {
+            background: rgba(15, 23, 42, 0.6);
+            font-weight: 600;
+            color: var(--text-primary);
+            position: sticky;
+            top: 0;
+        }
+        
+        .song-table tr:hover {
+            background: rgba(15, 23, 42, 0.4);
+        }
+        
+        .checkbox-col {
+            width: 50px;
+        }
+        
+        .table-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .table-btn {
+            padding: 6px 12px;
+            border-radius: var(--radius-md);
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .edit-btn {
+            background: rgba(14, 165, 233, 0.2);
+            color: var(--primary-color);
+            border: 1px solid rgba(14, 165, 233, 0.3);
+        }
+        
+        .edit-btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .delete-btn {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        .delete-btn:hover {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+        
+        .pagination button,
+        .pagination span {
+            padding: 8px 12px;
+            border: 1px solid rgba(203, 213, 225, 0.2);
+            background: var(--glass-bg);
+            color: var(--text-primary);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .pagination button:hover:not(:disabled) {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .pagination .current {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .batch-actions {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            align-items: center;
+        }
+        
+        .batch-actions button {
+            padding: 10px 20px;
+            border-radius: var(--radius-full);
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .batch-delete-btn {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        .batch-delete-btn:hover {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .batch-delete-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-content {
+            background-color: var(--glass-bg);
+            margin: 5% auto;
+            padding: 30px;
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            width: 90%;
+            max-width: 600px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: var(--shadow-xl);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .close {
+            color: var(--text-muted);
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+        
+        .close:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--primary-color);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--glass-bg);
+            border: 2px solid rgba(203, 213, 225, 0.2);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.3);
+        }
+        
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border-radius: var(--radius-full);
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .select-all {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Banner -->
+    <div class="banner">
+        <div class="container-fluid px-4">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h1><i class="fas fa-cog"></i> {{ call .T "admin_panel" }}</h1>
+                </div>
+                <div class="col-md-6 user-info">
+                    <a href="/" class="btn-header">
+                        <i class="fas fa-music"></i> {{ call .T "back_to_player" }}
+                    </a>
+                    <button class="btn-header" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> {{ call .T "logout" }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-container">
+        <div class="admin-card">
+            <h2 class="admin-title"><i class="fas fa-music"></i> {{ call .T "admin_song_management" }}</h2>
+            
+            <div class="admin-actions">
+                <div class="admin-search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="search-input" placeholder="{{ call .T "search_songs_placeholder" }}" />
+                </div>
+            </div>
+            
+            <div class="batch-actions">
+                <label class="select-all">
+                    <input type="checkbox" id="select-all" /> {{ call .T "select_all" }}
+                </label>
+                <button class="batch-delete-btn" id="batch-delete-btn" onclick="batchDeleteSongs()" disabled>
+                    <i class="fas fa-trash"></i> {{ call .T "delete_selected" }}
+                </button>
+                <span id="selected-count">{{ call .T "selected_count" }}: 0</span>
+            </div>
+            
+            <div class="song-table-container">
+                <table class="song-table">
+                    <thead>
+                        <tr>
+                            <th class="checkbox-col"><input type="checkbox" id="table-select-all" /></th>
+                            <th>{{ call .T "title" }}</th>
+                            <th>{{ call .T "artist" }}</th>
+                            <th>{{ call .T "album" }}</th>
+                            <th>{{ call .T "duration" }}</th>
+                            <th>{{ call .T "file_path" }}</th>
+                            <th class="actions-col">{{ call .T "actions" }}</th>
+                        </tr>
+                    </thead>
+                    <tbody id="songs-table-body">
+                        <!-- Songs will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="pagination" id="pagination">
+                <!-- Pagination will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Song Modal -->
+    <div id="edit-song-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">{{ call .T "edit_song" }}</h3>
+                <button class="close" onclick="closeEditModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-song-form">
+                    <input type="hidden" id="edit-song-id" />
+                    <div class="form-group">
+                        <label for="edit-title">{{ call .T "title" }}</label>
+                        <input type="text" class="form-control" id="edit-title" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-artist">{{ call .T "artist" }}</label>
+                        <input type="text" class="form-control" id="edit-artist" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-album">{{ call .T "album" }}</label>
+                        <input type="text" class="form-control" id="edit-album" />
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-duration">{{ call .T "duration" }} ({{ call .T "seconds" }})</label>
+                        <input type="number" class="form-control" id="edit-duration" min="0" step="1" />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeEditModal()">{{ call .T "cancel" }}</button>
+                <button class="btn btn-primary" onclick="updateSong()">{{ call .T "save" }}</button>
+            </div>
+        </div>
+    </div>
+
+    {{ template "scripts.html" . }}
+    <script>
+        let currentPage = 1;
+        const itemsPerPage = 10;
+        let allSongs = [];
+        let selectedSongs = new Set();
+        let currentEditSongId = null;
+        
+        // Check login status
+        const token = localStorage.getItem('token');
+        const username = localStorage.getItem('username');
+        
+        if (!token || !username) {
+            window.location.href = '/login';
+        } else {
+            loadSongs();
+        }
+        
+        // Load songs with pagination
+        async function loadSongs(page = 1) {
+            try {
+                const response = await fetch(`/api/v1/admin/songs?page=${page}&limit=${itemsPerPage}`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    allSongs = data.songs || [];
+                    renderSongsTable();
+                    renderPagination(data.pagination);
+                } else {
+                    console.error('Failed to load songs:', response.statusText);
+                    showMessage('加载歌曲列表失败', 'danger');
+                }
+            } catch (error) {
+                console.error('Error loading songs:', error);
+                showMessage('加载歌曲列表失败', 'danger');
+            }
+        }
+        
+        // Render songs table
+        function renderSongsTable() {
+            const tbody = document.getElementById('songs-table-body');
+            tbody.innerHTML = '';
+            
+            allSongs.forEach(song => {
+                const row = document.createElement('tr');
+                const isSelected = selectedSongs.has(song.id);
+                row.innerHTML = `
+                    <td class="checkbox-col">
+                        <input type="checkbox" class="song-checkbox" value="${song.id}" ${isSelected ? 'checked' : ''} />
+                    </td>
+                    <td>${song.title}</td>
+                    <td>${song.artist}</td>
+                    <td>${song.album || '-'}</td>
+                    <td>${formatDuration(song.duration)}</td>
+                    <td>${song.file_path}</td>
+                    <td class="actions-col">
+                        <div class="table-actions">
+                            <button class="table-btn edit-btn" onclick="openEditModal(${song.id})">
+                                <i class="fas fa-edit"></i> {{ call .T "edit" }}
+                            </button>
+                            <button class="table-btn delete-btn" onclick="deleteSong(${song.id})">
+                                <i class="fas fa-trash"></i> {{ call .T "delete" }}
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // Add event listeners to checkboxes
+            document.querySelectorAll('.song-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', handleSongSelection);
+            });
+            
+            updateSelectedCount();
+        }
+        
+        // Format duration from seconds to MM:SS
+        function formatDuration(seconds) {
+            if (!seconds) return '-';
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        // Handle individual song selection
+        function handleSongSelection(event) {
+            const songId = parseInt(event.target.value);
+            
+            if (event.target.checked) {
+                selectedSongs.add(songId);
+            } else {
+                selectedSongs.delete(songId);
+            }
+            
+            updateSelectedCount();
+            updateBatchDeleteButton();
+        }
+        
+        // Update selected count display
+        function updateSelectedCount() {
+            const count = selectedSongs.size;
+            document.getElementById('selected-count').textContent = `{{ call .T "selected_count" }}: ${count}`;
+        }
+        
+        // Update batch delete button state
+        function updateBatchDeleteButton() {
+            const btn = document.getElementById('batch-delete-btn');
+            btn.disabled = selectedSongs.size === 0;
+        }
+        
+        // Select/deselect all songs
+        document.getElementById('select-all').addEventListener('change', function() {
+            const isChecked = this.checked;
+            const checkboxes = document.querySelectorAll('.song-checkbox');
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = isChecked;
+                const songId = parseInt(checkbox.value);
+                
+                if (isChecked) {
+                    selectedSongs.add(songId);
+                } else {
+                    selectedSongs.delete(songId);
+                }
+            });
+            
+            updateSelectedCount();
+            updateBatchDeleteButton();
+        });
+        
+        // Render pagination controls
+        function renderPagination(pagination) {
+            const paginationDiv = document.getElementById('pagination');
+            paginationDiv.innerHTML = '';
+            
+            if (!pagination || pagination.total_pages <= 1) {
+                return;
+            }
+            
+            // Previous button
+            if (pagination.current_page > 1) {
+                const prevBtn = document.createElement('button');
+                prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+                prevBtn.onclick = () => loadSongs(pagination.current_page - 1);
+                paginationDiv.appendChild(prevBtn);
+            }
+            
+            // Page buttons
+            const startPage = Math.max(1, pagination.current_page - 2);
+            const endPage = Math.min(pagination.total_pages, pagination.current_page + 2);
+            
+            if (startPage > 1) {
+                const firstBtn = document.createElement('button');
+                firstBtn.textContent = '1';
+                firstBtn.onclick = () => loadSongs(1);
+                paginationDiv.appendChild(firstBtn);
+                
+                if (startPage > 2) {
+                    const ellipsis = document.createElement('span');
+                    ellipsis.textContent = '...';
+                    paginationDiv.appendChild(ellipsis);
+                }
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.textContent = i;
+                if (i === pagination.current_page) {
+                    pageBtn.classList.add('current');
+                }
+                pageBtn.onclick = () => loadSongs(i);
+                paginationDiv.appendChild(pageBtn);
+            }
+            
+            if (endPage < pagination.total_pages) {
+                if (endPage < pagination.total_pages - 1) {
+                    const ellipsis = document.createElement('span');
+                    ellipsis.textContent = '...';
+                    paginationDiv.appendChild(ellipsis);
+                }
+                
+                const lastBtn = document.createElement('button');
+                lastBtn.textContent = pagination.total_pages;
+                lastBtn.onclick = () => loadSongs(pagination.total_pages);
+                paginationDiv.appendChild(lastBtn);
+            }
+            
+            // Next button
+            if (pagination.current_page < pagination.total_pages) {
+                const nextBtn = document.createElement('button');
+                nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                nextBtn.onclick = () => loadSongs(pagination.current_page + 1);
+                paginationDiv.appendChild(nextBtn);
+            }
+        }
+        
+        // Open edit modal
+        function openEditModal(songId) {
+            const song = allSongs.find(s => s.id === songId);
+            if (!song) return;
+            
+            currentEditSongId = songId;
+            document.getElementById('edit-song-id').value = songId;
+            document.getElementById('edit-title').value = song.title || '';
+            document.getElementById('edit-artist').value = song.artist || '';
+            document.getElementById('edit-album').value = song.album || '';
+            document.getElementById('edit-duration').value = song.duration || '';
+            
+            document.getElementById('edit-song-modal').style.display = 'block';
+        }
+        
+        // Close edit modal
+        function closeEditModal() {
+            document.getElementById('edit-song-modal').style.display = 'none';
+        }
+        
+        // Update song
+        async function updateSong() {
+            const songId = document.getElementById('edit-song-id').value;
+            const title = document.getElementById('edit-title').value;
+            const artist = document.getElementById('edit-artist').value;
+            const album = document.getElementById('edit-album').value;
+            const duration = parseInt(document.getElementById('edit-duration').value) || 0;
+            
+            try {
+                const response = await fetch(`/api/v1/admin/songs/${songId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        title: title,
+                        artist: artist,
+                        album: album,
+                        duration: duration
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showMessage(data.message || '歌曲信息更新成功', 'success');
+                    closeEditModal();
+                    loadSongs(currentPage); // Reload current page
+                } else {
+                    const errorData = await response.json();
+                    showMessage(errorData.error || '更新失败', 'danger');
+                }
+            } catch (error) {
+                console.error('Error updating song:', error);
+                showMessage('更新失败', 'danger');
+            }
+        }
+        
+        // Delete single song
+        async function deleteSong(songId) {
+            const confirmed = await showConfirm('{{ call .T "confirm_delete_song" }}');
+            if (!confirmed) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/v1/admin/songs/${songId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showMessage(data.message || '歌曲删除成功', 'success');
+                    loadSongs(currentPage); // Reload current page
+                    // Remove from selected songs if it was selected
+                    selectedSongs.delete(songId);
+                    updateSelectedCount();
+                    updateBatchDeleteButton();
+                } else {
+                    const errorData = await response.json();
+                    showMessage(errorData.error || '删除失败', 'danger');
+                }
+            } catch (error) {
+                console.error('Error deleting song:', error);
+                showMessage('删除失败', 'danger');
+            }
+        }
+        
+        // Batch delete songs
+        async function batchDeleteSongs() {
+            if (selectedSongs.size === 0) {
+                showMessage('请先选择要删除的歌曲', 'warning');
+                return;
+            }
+            
+            const confirmed = await showConfirm(`{{ call .T "confirm_delete_selected_songs" }} (${selectedSongs.size} {{ call .T "items" }})`);
+            if (!confirmed) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/v1/admin/songs', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        song_ids: Array.from(selectedSongs)
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showMessage(data.message || '歌曲批量删除成功', 'success');
+                    selectedSongs.clear();
+                    updateSelectedCount();
+                    updateBatchDeleteButton();
+                    loadSongs(currentPage); // Reload current page
+                } else {
+                    const errorData = await response.json();
+                    showMessage(errorData.error || '批量删除失败', 'danger');
+                }
+            } catch (error) {
+                console.error('Error batch deleting songs:', error);
+                showMessage('批量删除失败', 'danger');
+            }
+        }
+        
+        // Search functionality
+        const searchInput = document.getElementById('search-input');
+        let searchTimeout;
+        
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                performSearch();
+            }, 500);
+        });
+        
+        async function performSearch() {
+            const query = searchInput.value.trim();
+            if (!query) {
+                loadSongs(1);
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/v1/admin/songs/search?q=${encodeURIComponent(query)}&page=1&limit=${itemsPerPage}`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    allSongs = data.songs || [];
+                    currentPage = 1; // Reset to first page when searching
+                    renderSongsTable();
+                    renderPagination(data.pagination);
+                } else {
+                    console.error('Search failed:', response.statusText);
+                    showMessage('搜索失败', 'danger');
+                }
+            } catch (error) {
+                console.error('Error searching songs:', error);
+                showMessage('搜索失败', 'danger');
+            }
+        }
+        
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('edit-song-modal');
+            if (event.target === modal) {
+                closeEditModal();
+            }
+        }
+        
+        // Logout function
+        function logout() {
+            fetch('/api/v1/logout', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+            .then(() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('username');
+                window.location.href = '/login';
+            })
+            .catch(err => {
+                console.error('Logout error:', err);
+                localStorage.removeItem('token');
+                localStorage.removeItem('username');
+                window.location.href = '/login';
+            });
+        }
+    </script>
+</body>
+</html>

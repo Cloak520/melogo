@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    {{ template "head.html" . }}
+</head>
+<body>
+    <!-- Banner -->
+    <div class="banner">
+        <div class="container-fluid px-4">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h1><i class="fas fa-music"></i> {{ call .T "app_name" }}</h1>
+                </div>
+                <div class="col-md-6 user-info">
+                    <a href="/" class="btn-header">
+                        <i class="fas fa-home"></i> {{ call .T "back_to_home" }}
+                    </a>
+                    <a href="/playlists" class="btn-header">
+                        <i class="fas fa-arrow-left"></i> {{ call .T "back" }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container py-5">
+        <div class="card-custom p-5">
+            <h1 id="playlist-name" class="playlist-title">{{ call .T "loading" }}...</h1>
+            <div id="playlist-meta" class="text-secondary font-weight-500"></div>
+            <div class="d-flex justify-content-between align-items-center mb-5">
+                <h4 class="mb-0 font-weight-bold">{{ call .T "songs_list" }} (<span id="song-count">0</span>)</h4>
+                <button class="btn-primary-custom" data-toggle="modal" data-target="#addSongModal">
+                    <i class="fas fa-plus"></i> {{ call .T "add_songs" }}
+                </button>
+            </div>
+            <div id="songs-container">
+                <div class="text-center" style="padding: 50px;">
+                    <i class="fas fa-spinner fa-spin fa-3x text-muted"></i>
+                    <p class="mt-3 text-muted">{{ call .T "loading" }}...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Song Modal -->
+    <div class="modal fade" id="addSongModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-plus-circle"></i> {{ call .T "add_songs" }}</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="available-songs-container" style="max-height: 400px; overflow-y: auto;">
+                    <div class="text-center">
+                        <i class="fas fa-spinner fa-spin fa-2x text-muted"></i>
+                        <p class="mt-2 text-muted">{{ call .T "loading" }}...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{ template "scripts.html" . }}
+    <script>
+        const token = localStorage.getItem('token');
+        const playlistId = window.location.pathname.split('/').pop();
+        
+        if (!token) {
+            window.location.href = '/login';
+        }
+
+        let playlistData = null;
+        let songsData = [];
+        let allSongs = [];
+
+        // Load playlist detail
+        function loadPlaylistDetail() {
+            fetch(`/api/v1/playlists/${playlistId}/detail`, {
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.playlist) {
+                    playlistData = data.playlist;
+                    songsData = data.songs || [];
+                    renderPlaylistInfo();
+                    renderSongs();
+                } else {
+                    alert(t('playlist_not_found'));
+                    window.location.href = '/playlists';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMessage(t('load_failed'), 'danger');
+            });
+        }
+
+        // Render playlist info
+        function renderPlaylistInfo() {
+            document.getElementById('playlist-name').textContent = playlistData.name;
+            document.getElementById('playlist-meta').innerHTML = `
+                <i class="fas fa-music"></i> ${t('songs_count', {Count: playlistData.song_count})}
+                ${playlistData.is_public ? '<i class="fas fa-globe ml-3"></i> ' + t('public') : '<i class="fas fa-lock ml-3"></i> ' + t('private')}
+            `;
+        }
+
+        // Render songs
+        function renderSongs() {
+            const container = document.getElementById('songs-container');
+            document.getElementById('song-count').textContent = songsData.length;
+
+            if (songsData.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-music"></i>
+                        <p class="text-muted">${t('no_songs')}</p>
+                        <button class="btn btn-custom btn-primary-custom mt-3" data-toggle="modal" data-target="#addSongModal">
+                            <i class="fas fa-plus"></i> ${t('add_songs')}
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = songsData.map((song, index) => `
+                <div class="music-item" onclick="playSong(${song.song_id})" style="padding: 16px 20px;">
+                    <div class="music-item-index">${index + 1}</div>
+                    <div class="music-item-info">
+                        <div class="music-item-title">${song.title}</div>
+                        <div class="music-item-artist">${song.artist}</div>
+                    </div>
+                    <div class="music-item-duration">${formatDuration(song.duration)}</div>
+                    <div class="music-item-actions" onclick="event.stopPropagation()">
+                        <button onclick="removeSong(${song.song_id})" class="action-btn text-danger" title="${t('remove')}">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Load available songs for adding
+        function loadAvailableSongs() {
+            fetch('/api/v1/songs', {
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                allSongs = data.songs || [];
+                renderAvailableSongs();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        // Render available songs
+        function renderAvailableSongs() {
+            const container = document.getElementById('available-songs-container');
+            const existingSongIds = new Set(songsData.map(s => s.song_id));
+            const availableSongs = allSongs.filter(s => !existingSongIds.has(s.id));
+
+            if (availableSongs.length === 0) {
+                container.innerHTML = `<p class="text-center text-muted">${t('all_songs_added')}</p>`;
+                return;
+            }
+
+            container.innerHTML = availableSongs.map(song => `
+                <div class="music-item" onclick="addSong(${song.id})" style="padding: 12px 20px;">
+                    <div class="music-item-info">
+                        <div class="music-item-title" style="font-size: 1rem;">${song.title}</div>
+                        <div class="music-item-artist">${song.artist}</div>
+                    </div>
+                    <div class="music-item-duration">${formatDuration(song.duration)}</div>
+                    <button class="btn-primary-custom btn-sm" style="padding: 6px 16px; font-size: 0.85rem;">
+                        <i class="fas fa-plus"></i> ${t('add_songs')}
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Add song to playlist
+        function addSong(songId) {
+            fetch(`/api/v1/playlists/${playlistId}/songs`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ song_id: songId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    loadPlaylistDetail();
+                    loadAvailableSongs();
+                } else {
+                    showMessage(data.error || t('add_failed'), 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMessage(t('add_failed'), 'danger');
+            });
+        }
+
+        // Remove song from playlist
+        async function removeSong(songId) {
+            const confirmed = await showConfirm(t('confirm_remove_song'));
+            if (!confirmed) {
+                return;
+            }
+
+            fetch(`/api/v1/playlists/${playlistId}/songs/${songId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    loadPlaylistDetail();
+                } else {
+                    showMessage(data.error || t('remove_failed'), 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMessage(t('remove_failed'), 'danger');
+            });
+        }
+
+        // Play song (placeholder)
+        function playSong(songId) {
+            // TODO: Implement play functionality
+            showMessage(t('play_feature_todo') + songId, 'info');
+        }
+
+        // Format duration
+        function formatDuration(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Load on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPlaylistDetail();
+        });
+
+        // Load available songs when modal opens
+        $('#addSongModal').on('show.bs.modal', function() {
+            loadAvailableSongs();
+        });
+    </script>
+</body>
+</html>

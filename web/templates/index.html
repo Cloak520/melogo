@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    {{ template "head.html" . }}
+    <style>
+        /* Banner */
+        .banner h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--primary-color);
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        
+        /* Main Container */
+        .main-container {
+            display: flex;
+            height: calc(100vh - 72px);
+            padding: 24px;
+            gap: 24px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        /* Context Menu */
+        .context-menu {
+            position: absolute;
+            z-index: 10000;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 8px 0;
+            min-width: 180px;
+            box-shadow: var(--shadow-xl);
+            display: none;
+        }
+        .context-menu ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .context-menu ul li {
+            padding: 10px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-primary);
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        .context-menu ul li:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--primary-color);
+        }
+        .context-menu ul li i {
+            width: 16px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- Banner -->
+    <div class="banner">
+        <div class="container-fluid px-4">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h1><i class="fas fa-music"></i> {{ call .T "app_name" }}</h1>
+                </div>
+                <div class="col-md-6 user-info">
+                    <a href="/playlists" class="btn-header">
+                        <i class="fas fa-list"></i> {{ call .T "playlists" }}
+                    </a>
+                    <a href="/profile" class="btn-header" id="username-display" style="text-decoration: none;">
+                        <i class="fas fa-user-circle"></i> <span id="username-text" style="font-weight: 700;"></span>
+                    </a>
+                    <a href="/admin/songs" class="btn-header" id="admin-panel-link" style="display: none; text-decoration: none;">
+                        <i class="fas fa-cog"></i> {{ call .T "admin_panel" }}
+                    </a>
+                    <button class="btn-header" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> {{ call .T "logout" }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Left Player Section -->
+        <div class="player-section" style="height: 100%;">
+            <div class="album-cover" id="album-cover">
+                <img src="/assets/images/MeloGo.png" alt="MeloGo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+            </div>
+            <div class="song-info">
+                <div class="song-title" id="current-song-title">{{ call .T "select_song_to_play" }}</div>
+                <div class="song-artist" id="current-song-artist">MeloGo</div>
+            </div>
+            
+            <!-- Lyrics Container -->
+            <div class="lyrics-section" id="lyrics-container">
+                <div class="no-lyrics">{{ call .T "no_lyrics" }}</div>
+            </div>
+
+            <div class="progress-section" style="margin-top: auto;">
+                <div class="progress-bar-custom" id="progress-bar">
+                    <div class="progress-bar-fill" id="progress-fill"></div>
+                </div>
+                <div class="time-info">
+                    <span id="current-time">0:00</span>
+                    <span id="total-time">0:00</span>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="repeat-mode-btn" id="repeat-mode-btn" onclick="toggleRepeatMode()">
+                    <i class="fas fa-redo" id="repeat-mode-icon"></i>
+                </button>
+                <button class="control-btn" onclick="previousSong()">
+                    <i class="fas fa-step-backward"></i>
+                </button>
+                <div class="play-btn" id="play-btn" onclick="togglePlay()">
+                    <i class="fas fa-play" id="play-icon"></i>
+                </div>
+                <button class="control-btn" onclick="nextSong()">
+                    <i class="fas fa-step-forward"></i>
+                </button>
+                <button class="stop-btn" onclick="stopPlayer()">
+                    <i class="fas fa-stop"></i>
+                </button>
+            </div>
+            <div class="volume-section">
+                <i class="fas fa-volume-up" id="volume-icon" style="color: #666; cursor: pointer; width: 20px;"></i>
+                <div class="volume-slider" id="volume-slider">
+                    <div id="volume-fill" style="height: 100%; background: var(--primary-color); width: 80%; border-radius: 2px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Music List Section -->
+        <div class="music-list-section">
+            <div class="list-header">
+                <div style="display: none;">
+                    <h2 id="list-title" style="margin-bottom: 0;"><i class="fas fa-list"></i> {{ call .T "all_music" }}</h2>
+                    <small id="list-subtitle" class="text-muted" style="display: none;"></small>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <select id="playlist-selector">
+                        <option value="all">{{ call .T "all_music" }}</option>
+                    </select>
+                    <div class="search-box">
+                        <input type="text" placeholder="{{ call .T "search_songs_placeholder" }}" id="search-input">
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="music-list" id="music-list">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>{{ call .T "loading" }}...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Audio Element -->
+    <audio id="audio-player" style="display: none;"></audio>
+    
+
+
+    <!-- Context Menu -->
+    <div id="context-menu" class="context-menu">
+        <ul id="context-menu-items">
+            <!-- Items injected by JS -->
+        </ul>
+    </div>
+
+    <!-- Add to Playlist Modal -->
+    <div class="modal fade" id="addToPlaylistModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background: var(--bg-color); border: 1px solid var(--glass-border); border-radius: var(--radius-lg);">
+                <div class="modal-header" style="border-bottom: 1px solid var(--glass-border);">
+                    <h5 class="modal-title" style="color: var(--text-primary);">{{ call .T "add_to_playlist" }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" style="color: var(--text-primary);">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" style="padding: 0;">
+                    <div id="modal-playlist-list" class="list-group list-group-flush">
+                        <!-- Playlists injected by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{ template "scripts.html" . }}
+    <script>
+        let currentSongIndex = -1;
+        let songs = [];
+        let isPlaying = false;
+        let currentPlaylistId = 'all';
+        const audioPlayer = document.getElementById('audio-player');
+        
+
+        // Check login status
+        const token = localStorage.getItem('token');
+        const username = localStorage.getItem('username');
+        
+        if (!token || !username) {
+            window.location.href = '/login';
+        } else {
+            document.getElementById('username-text').textContent = username;
+            checkAdminStatus();
+            loadPlaylists();
+            loadSongs();
+        }
+        
+        // Check if user is admin
+        async function checkAdminStatus() {
+            try {
+                const response = await fetch('/api/v1/user/profile', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+                
+                if (response.ok) {
+                    const user = await response.json();
+                    if (user.is_admin === 1) { // 管理员
+                        document.getElementById('admin-panel-link').style.display = 'flex';
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking admin status:', error);
+            }
+        }
+
+        // Load playlists for selector
+        function loadPlaylists() {
+            fetch('/api/v1/playlists', {
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const selector = document.getElementById('playlist-selector');
+                const playlists = data.playlists || [];
+                
+                // Keep "All Songs" option
+                selector.innerHTML = `<option value="all">${t('all_music')}</option>`;
+                
+                playlists.forEach(playlist => {
+                    const option = document.createElement('option');
+                    option.value = playlist.id;
+                    option.textContent = playlist.name;
+                    selector.appendChild(option);
+                });
+
+                // Restore selection if needed
+                selector.value = currentPlaylistId;
+            })
+            .catch(error => console.error('Error loading playlists:', error));
+        }
+
+        // Handle playlist selection change
+        document.getElementById('playlist-selector').addEventListener('change', function(e) {
+            currentPlaylistId = e.target.value;
+            loadSongs();
+            
+            // Update title
+            const title = document.getElementById('list-title');
+            const subtitle = document.getElementById('list-subtitle');
+            
+            if (currentPlaylistId === 'all') {
+                title.innerHTML = `<i class="fas fa-list"></i> ${t('all_music')}`;
+                subtitle.style.display = 'none';
+            } else {
+                const selectedOption = e.target.options[e.target.selectedIndex];
+                const name = selectedOption.text;
+                title.innerHTML = `<i class="fas fa-list-ul"></i> ${name}`;
+                subtitle.style.display = 'block';
+                subtitle.textContent = t('playlists_label');
+            }
+        });
+
+        // Load songs from API
+        async function loadSongs() {
+            try {
+                let url = '/api/v1/songs';
+                
+                if (currentPlaylistId !== 'all') {
+                    url = `/api/v1/playlists/${currentPlaylistId}/detail`;
+                }
+
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (currentPlaylistId === 'all') {
+                        songs = data.songs || [];
+                    } else {
+                        // Transform playlist songs to match regular songs structure
+                        songs = (data.songs || []).map(item => ({
+                            ...item,
+                            id: item.song_id, // Use the actual song ID
+                            playlist_relation_id: item.id // Keep the relation ID if needed
+                        }));
+                    }
+                    
+                    renderMusicList();
+                } else {
+                    showErrorState();
+                }
+            } catch (error) {
+                console.error('Error loading songs:', error);
+                showErrorState();
+            }
+        }
+
+        // Search functionality
+        const searchInput = document.getElementById('search-input');
+        
+        // Debounce utility
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Search handler
+        const handleSearch = debounce(async (e) => {
+            const query = e.target.value.trim();
+            
+            if (!query) {
+                // If query is empty, reload current view (playlist or all songs)
+                loadSongs();
+                return;
+            }
+
+            try {
+                // Reset playlist selection visually (optional, depending on UX preference)
+                // document.getElementById('playlist-selector').value = 'all';
+                // currentPlaylistId = 'all';
+
+                const response = await fetch(`/api/v1/search?q=${encodeURIComponent(query)}`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    songs = data.songs || [];
+                    renderMusicList();
+                } else {
+                    console.error('Search failed');
+                    songs = [];
+                    renderMusicList();
+                }
+            } catch (error) {
+                console.error('Error searching songs:', error);
+                showErrorState();
+            }
+        }, 300);
+
+        searchInput.addEventListener('input', handleSearch);
+
+        function showErrorState() {
+            document.getElementById('music-list').innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>${t('load_failed')}</p>
+                </div>
+            `;
+        }
+
+        // Render music list
+        function renderMusicList() {
+            const musicList = document.getElementById('music-list');
+            
+            if (songs.length === 0) {
+                musicList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-music"></i>
+                        <p>${t('no_songs')}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            musicList.innerHTML = songs.map((song, index) => {
+                const isFavorite = song.is_favorite || false;
+                return `
+                    <div class="music-item ${index === currentSongIndex ? 'active' : ''}" 
+                         onclick="playSong(${index})"
+                         oncontextmenu="showContextMenu(event, ${song.id})">
+                        <div class="music-item-index">${index + 1}</div>
+                        <div class="music-item-info">
+                            <div class="music-item-title">${song.title}</div>
+                            <div class="music-item-artist">${song.artist}</div>
+                        </div>
+                        <div class="music-item-duration">${formatDuration(song.duration)}</div>
+                        <div class="music-item-actions">
+                            <button class="action-btn" onclick="event.stopPropagation(); toggleFavorite(${song.id}, this)">
+                                <i class="${isFavorite ? 'fas' : 'far'} fa-heart ${isFavorite ? 'text-danger' : ''}"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Play song
+        async function playSong(index) {
+            if (index < 0 || index >= songs.length) return;
+            
+            currentSongIndex = index;
+            const song = songs[index];
+            const albumCover = document.getElementById('album-cover');
+            
+            document.getElementById('current-song-title').textContent = song.title;
+            document.getElementById('current-song-artist').textContent = song.artist;
+            
+            // Update album cover (using the new endpoint)
+            updateAlbumCover(song);
+            
+            // Load lyrics
+            loadLyrics(song.id);
+            
+            audioPlayer.src = `/api/v1/songs/${song.id}/stream`;
+            
+            // Reset rotation before starting new song
+            albumCover.classList.remove('rotating', 'paused');
+            
+            // Force a reflow to ensure the animation restarts from the beginning
+            void albumCover.offsetWidth;
+            
+            audioPlayer.play();
+            isPlaying = true;
+            
+            document.getElementById('play-icon').className = 'fas fa-pause';
+            startRotation();
+            renderMusicList();
+        }
+        
+        // Update album cover
+        function updateAlbumCover(song) {
+            const albumCover = document.getElementById('album-cover');
+            
+            // Clear existing content
+            albumCover.innerHTML = '';
+            
+            // Fetch cover image from backend
+            const img = document.createElement('img');
+            img.src = `/api/v1/songs/${song.id}/cover?t=${new Date().getTime()}`;
+            img.alt = song.title;
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'cover';
+            img.style.borderRadius = '50%'; // Keep circular
+            img.onerror = function() {
+                // Show default cover if image loading fails
+                albumCover.innerHTML = '<img src="/assets/images/MeloGo.png" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">';
+            };
+            albumCover.appendChild(img);
+        }
+
+        // Lyrics data
+        let currentLyrics = []; // [{time: seconds, text: string}]
+
+        // Load lyrics
+        async function loadLyrics(songId) {
+            const container = document.getElementById('lyrics-container');
+            container.innerHTML = `<div class="no-lyrics">${t('loading_lyrics')}</div>`;
+            currentLyrics = [];
+
+            try {
+                const response = await fetch(`/api/v1/songs/${songId}/lyrics`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.lyrics) {
+                        currentLyrics = parseLRC(data.lyrics);
+                        renderLyrics();
+                    } else {
+                        container.innerHTML = `<div class="no-lyrics">${t('no_lyrics')}</div>`;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading lyrics:', error);
+                container.innerHTML = `<div class="no-lyrics">${t('lyrics_error')}</div>`;
+            }
+        }
+
+        // Parse LRC format
+        function parseLRC(lrcText) {
+            const lines = lrcText.split('\n');
+            const result = [];
+            const timeReg = /\[(\d{2}):(\d{2})(?:\.(\d{2,3}))?\]/g;
+
+            lines.forEach(line => {
+                const text = line.replace(timeReg, '').trim();
+                if (!text) return;
+
+                let match;
+                timeReg.lastIndex = 0;
+                while ((match = timeReg.exec(line)) !== null) {
+                    const min = parseInt(match[1]);
+                    const sec = parseInt(match[2]);
+                    const ms = match[3] ? parseInt(match[3]) : 0;
+                    const time = min * 60 + sec + (ms > 99 ? ms / 1000 : ms / 100);
+                    result.push({ time, text });
+                }
+            });
+
+            // Sort by time
+            result.sort((a, b) => a.time - b.time);
+            return result;
+        }
+
+        // Render lyrics to container
+        function renderLyrics() {
+            const container = document.getElementById('lyrics-container');
+            if (currentLyrics.length === 0) {
+                container.innerHTML = `<div class="no-lyrics">${t('no_lyrics')}</div>`;
+                return;
+            }
+
+            container.innerHTML = currentLyrics.map((line, index) => `
+                <div class="lyrics-line" id="lyric-line-${index}">${line.text}</div>
+            `).join('');
+        }
+
+        // Update lyrics highlight and scrolling
+        function syncLyrics(currentTime) {
+            if (currentLyrics.length === 0) return;
+
+            let activeIndex = -1;
+            for (let i = 0; i < currentLyrics.length; i++) {
+                if (currentTime >= currentLyrics[i].time) {
+                    activeIndex = i;
+                } else {
+                    break;
+                }
+            }
+
+            if (activeIndex !== -1) {
+                const lines = document.querySelectorAll('.lyrics-line');
+                lines.forEach((line, index) => {
+                    if (index === activeIndex) {
+                        if (!line.classList.contains('active')) {
+                            line.classList.add('active');
+                            // Auto-scroll to middle
+                            const container = document.getElementById('lyrics-container');
+                            const lineTop = line.offsetTop - container.offsetTop;
+                            const containerHeight = container.clientHeight;
+                            container.scrollTo({
+                                top: lineTop - containerHeight / 2 + line.clientHeight / 2,
+                                behavior: 'smooth'
+                            });
+                        }
+                    } else {
+                        line.classList.remove('active');
+                    }
+                });
+            }
+        }
+
+        // CSS-based rotation control with animation restart
+        function startRotation() {
+            const albumCover = document.getElementById('album-cover');
+                    
+            // Remove animation class to reset
+            albumCover.classList.remove('rotating');
+                    
+            // Force reflow to ensure animation restarts from beginning
+            void albumCover.offsetWidth;
+                    
+            // Add animation class back
+            albumCover.classList.add('rotating');
+            albumCover.classList.remove('paused');
+        }
+                
+        // Pause rotation
+        function pauseRotation() {
+            const albumCover = document.getElementById('album-cover');
+            albumCover.classList.add('paused');
+        }
+                
+        // Reset rotation
+        function resetRotation() {
+            const albumCover = document.getElementById('album-cover');
+            albumCover.classList.remove('rotating', 'paused');
+        }
+        
+        // Toggle play/pause
+        function togglePlay() {
+            const albumCover = document.getElementById('album-cover');
+            
+            if (currentSongIndex === -1 && songs.length > 0) {
+                if (currentRepeatMode === REPEAT_MODE.RANDOM) {
+                    // 在随机模式下，播放随机歌曲
+                    playRandomSong();
+                } else {
+                    // 在其他模式下，播放第一首歌曲
+                    playSong(0);
+                }
+            } else if (isPlaying) {
+                audioPlayer.pause();
+                isPlaying = false;
+                document.getElementById('play-icon').className = 'fas fa-play';
+                pauseRotation();
+            } else {
+                audioPlayer.play();
+                isPlaying = true;
+                document.getElementById('play-icon').className = 'fas fa-pause';
+                albumCover.classList.remove('paused');
+            }
+        }
+
+        // Previous/Next song
+        function previousSong() {
+            if (currentRepeatMode === REPEAT_MODE.RANDOM) {
+                // 在随机模式下，播放随机歌曲
+                playRandomSong();
+            } else {
+                // 在其他模式下，播放上一首
+                if (currentSongIndex > 0) {
+                    playSong(currentSongIndex - 1);
+                }
+            }
+        }
+
+        function nextSong() {
+            if (currentRepeatMode === REPEAT_MODE.RANDOM) {
+                // 在随机模式下，播放随机歌曲
+                playRandomSong();
+            } else {
+                // 在其他模式下，播放下一首
+                if (currentSongIndex < songs.length - 1) {
+                    playSong(currentSongIndex + 1);
+                }
+            }
+        }
+        
+        // Play a random song
+        function playRandomSong() {
+            if (songs.length === 0) return;
+            
+            let randomIndex;
+            // 如果只有一首歌，直接播放
+            if (songs.length === 1) {
+                randomIndex = 0;
+            } else {
+                // 随机选择一首不同于当前歌曲的歌
+                do {
+                    randomIndex = Math.floor(Math.random() * songs.length);
+                } while (randomIndex === currentSongIndex && songs.length > 1);
+            }
+            
+            playSong(randomIndex);
+        }
+        
+        // Stop player and reset to initial state
+        function stopPlayer() {
+            // Pause the audio
+            audioPlayer.pause();
+            
+            // Reset audio time
+            audioPlayer.currentTime = 0;
+            
+            // Update play button icon
+            document.getElementById('play-icon').className = 'fas fa-play';
+            
+            // Reset rotation
+            resetRotation();
+            
+            // Reset song info display
+            document.getElementById('current-song-title').textContent = t('select_song_to_play');
+            document.getElementById('current-song-artist').textContent = 'MeloGo';
+            
+            // Reset progress bar
+            document.getElementById('progress-fill').style.width = '0%';
+            document.getElementById('current-time').textContent = '0:00';
+            document.getElementById('total-time').textContent = '0:00';
+            
+            // Reset album cover
+            const albumCover = document.getElementById('album-cover');
+            albumCover.innerHTML = '<img src="/assets/images/MeloGo.png" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">';
+            
+            // Reset lyrics
+            const lyricsContainer = document.getElementById('lyrics-container');
+            lyricsContainer.innerHTML = `<div class="no-lyrics">${t('no_lyrics')}</div>`;
+            
+            // Reset current song index
+            currentSongIndex = -1;
+            
+            // Update music list to remove active class
+            renderMusicList();
+        }
+
+        // Format duration
+        function formatDuration(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Audio player events
+        audioPlayer.addEventListener('timeupdate', function() {
+            const current = audioPlayer.currentTime;
+            const duration = audioPlayer.duration;
+            
+            if (duration) {
+                const percent = (current / duration) * 100;
+                document.getElementById('progress-fill').style.width = percent + '%';
+                document.getElementById('current-time').textContent = formatDuration(Math.floor(current));
+                document.getElementById('total-time').textContent = formatDuration(Math.floor(duration));
+            }
+
+            // Sync lyrics
+            syncLyrics(current);
+        });
+        
+        // Progress bar click to seek
+        document.getElementById('progress-bar').addEventListener('click', function(e) {
+            if (!audioPlayer.duration) return;
+            
+            const rect = this.getBoundingClientRect();
+            const pos = (e.clientX - rect.left) / rect.width;
+            audioPlayer.currentTime = pos * audioPlayer.duration;
+        });
+
+        // Volume control
+        const volumeSlider = document.getElementById('volume-slider');
+        const volumeFill = document.getElementById('volume-fill');
+        const volumeIcon = document.getElementById('volume-icon');
+        let lastVolume = 0.8;
+
+        // Initialize volume
+        audioPlayer.volume = lastVolume;
+
+        volumeSlider.addEventListener('click', function(e) {
+            const rect = this.getBoundingClientRect();
+            let pos = (e.clientX - rect.left) / rect.width;
+            pos = Math.max(0, Math.min(1, pos));
+            
+            audioPlayer.volume = pos;
+            volumeFill.style.width = (pos * 100) + '%';
+            
+            updateVolumeIcon(pos);
+            if (pos > 0) lastVolume = pos;
+        });
+
+        function updateVolumeIcon(volume) {
+            if (volume === 0) {
+                volumeIcon.className = 'fas fa-volume-mute';
+            } else if (volume < 0.5) {
+                volumeIcon.className = 'fas fa-volume-down';
+            } else {
+                volumeIcon.className = 'fas fa-volume-up';
+            }
+        }
+
+        volumeIcon.addEventListener('click', function() {
+            if (audioPlayer.volume > 0) {
+                lastVolume = audioPlayer.volume;
+                audioPlayer.volume = 0;
+                volumeFill.style.width = '0%';
+                updateVolumeIcon(0);
+            } else {
+                audioPlayer.volume = lastVolume;
+                volumeFill.style.width = (lastVolume * 100) + '%';
+                updateVolumeIcon(lastVolume);
+            }
+        });
+
+        // Repeat mode constants
+        const REPEAT_MODE = {
+            ALL: 'all',      // 顺序播放
+            ONE: 'one',      // 单曲循环
+            RANDOM: 'random' // 随机播放
+        };
+        
+        let currentRepeatMode = REPEAT_MODE.ALL; // 默认顺序播放
+        
+        // Toggle repeat mode
+        function toggleRepeatMode() {
+            if (currentRepeatMode === REPEAT_MODE.ALL) {
+                currentRepeatMode = REPEAT_MODE.ONE;
+            } else if (currentRepeatMode === REPEAT_MODE.ONE) {
+                currentRepeatMode = REPEAT_MODE.RANDOM;
+            } else {
+                currentRepeatMode = REPEAT_MODE.ALL;
+            }
+            
+            updateRepeatModeButton();
+        }
+        
+        // Update repeat mode button appearance
+        function updateRepeatModeButton() {
+            const repeatBtn = document.getElementById('repeat-mode-btn');
+            const repeatIcon = document.getElementById('repeat-mode-icon');
+            
+            // Remove all active classes
+            repeatBtn.classList.remove('active');
+            
+            // Clear existing indicators
+            const existingIndicator = repeatBtn.querySelector('.repeat-count');
+            if (existingIndicator) {
+                existingIndicator.remove();
+            }
+            
+            if (currentRepeatMode === REPEAT_MODE.ONE) {
+                // Single repeat mode - use repeat icon with indicator
+                repeatIcon.className = 'fas fa-redo';
+                repeatBtn.classList.add('active');
+                
+                // Add the number 1 indicator
+                const indicator = document.createElement('span');
+                indicator.className = 'repeat-count';
+                indicator.textContent = '1';
+                repeatBtn.appendChild(indicator);
+            } else if (currentRepeatMode === REPEAT_MODE.RANDOM) {
+                // Random mode - use shuffle icon
+                repeatIcon.className = 'fas fa-random';
+                repeatBtn.classList.add('active');
+            } else {
+                // All mode - regular repeat icon
+                repeatIcon.className = 'fas fa-redo';
+            }
+        }
+        
+        // Initialize repeat mode button
+        const repeatBtn = document.getElementById('repeat-mode-btn');
+        repeatBtn.innerHTML = '<i class="fas fa-redo" id="repeat-mode-icon"></i>';
+        updateRepeatModeButton();
+        
+        audioPlayer.addEventListener('ended', function() {
+            pauseRotation();
+            
+            if (currentRepeatMode === REPEAT_MODE.ONE) {
+                // 单曲循环：重新播放当前歌曲
+                audioPlayer.currentTime = 0;
+                audioPlayer.play();
+                startRotation();
+            } else if (currentRepeatMode === REPEAT_MODE.RANDOM) {
+                // 随机播放：播放随机歌曲
+                playRandomSong();
+            } else {
+                // 顺序播放：播放下一首
+                nextSong();
+            }
+        });
+
+        // Search
+        document.getElementById('search-input').addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase();
+            const filtered = songs.filter(song => 
+                song.title.toLowerCase().includes(query) || 
+                song.artist.toLowerCase().includes(query)
+            );
+            
+            const musicList = document.getElementById('music-list');
+            if (filtered.length === 0) {
+                musicList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-search"></i>
+                        <p>${t('no_matching_songs')}</p>
+                    </div>
+                `;
+            } else {
+                musicList.innerHTML = filtered.map((song, index) => {
+                    const originalIndex = songs.indexOf(song);
+                    return `
+                        <div class="music-item ${originalIndex === currentSongIndex ? 'active' : ''}" 
+                             onclick="playSong(${originalIndex})"
+                             oncontextmenu="showContextMenu(event, ${song.id})">
+                            <div class="music-item-index">${originalIndex + 1}</div>
+                            <div class="music-item-info">
+                                <div class="music-item-title">${song.title}</div>
+                                <div class="music-item-artist">${song.artist}</div>
+                            </div>
+                            <div class="music-item-duration">${formatDuration(song.duration)}</div>
+                            <div class="music-item-actions">
+                                <button class="action-btn" onclick="event.stopPropagation(); addToFavorites(${song.id})">
+                                    <i class="fas fa-heart"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        });
+
+        // Add to favorites
+        function addToFavorites(songId) {
+            fetch('/api/v1/favorites', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ song_id: songId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    showMessage(t('added_to_favorites'), 'success');
+                } else {
+                    showMessage(data.error || t('add_failed'), 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMessage(t('add_failed'), 'danger');
+            });
+        }
+
+        // Remove from favorites
+        function removeFromFavorites(songId) {
+            fetch(`/api/v1/favorites/${songId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    showMessage(t('removed_from_favorites'), 'success');
+                } else {
+                    showMessage(data.error || t('remove_failed'), 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMessage(t('remove_failed'), 'danger');
+            });
+        }
+
+        // Logout
+        function logout() {
+            fetch('/api/v1/logout', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+            .then(() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('username');
+                window.location.href = '/login';
+            })
+            .catch(err => {
+                console.error('Logout error:', err);
+                localStorage.removeItem('token');
+                localStorage.removeItem('username');
+                window.location.href = '/login';
+            });
+        }
+        // Right Click Context Menu
+        let contextSongId = null;
+
+        document.addEventListener('click', function() {
+            document.getElementById('context-menu').style.display = 'none';
+        });
+
+        function showContextMenu(e, songId) {
+            e.preventDefault();
+            contextSongId = songId;
+            
+            const menu = document.getElementById('context-menu');
+            const menuItems = document.getElementById('context-menu-items');
+            
+            let html = `
+                <li onclick="openAddToPlaylistModal()">
+                    <i class="fas fa-plus-circle"></i> ${t('add_to_playlist')}
+                </li>
+            `;
+            
+            // If we are in a specific playlist (not 'all'), show remove option
+            if (currentPlaylistId !== 'all') {
+                html += `
+                    <li onclick="removeListSong()">
+                        <i class="fas fa-trash-alt"></i> ${t('remove_from_list')}
+                    </li>
+                `;
+            }
+            
+            menuItems.innerHTML = html;
+            
+            menu.style.display = 'block';
+            menu.style.left = e.pageX + 'px';
+            menu.style.top = e.pageY + 'px';
+        }
+
+        async function removeListSong() {
+            if (!contextSongId || currentPlaylistId === 'all') return;
+            
+            const confirmed = await showConfirm(t('confirm_remove_from_list'));
+            if (!confirmed) {
+                return;
+            }
+
+            fetch(`/api/v1/playlists/${currentPlaylistId}/songs/${contextSongId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    loadSongs(); // Reload current playlist
+                    showMessage(t('remove_success'), 'success');
+                } else {
+                    showMessage(data.error || t('remove_failed'), 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMessage(t('remove_failed'), 'danger');
+            });
+        }
+
+        function openAddToPlaylistModal() {
+            $('#addToPlaylistModal').modal('show');
+            loadPlaylistsForModal();
+        }
+
+        function loadPlaylistsForModal() {
+            const container = document.getElementById('modal-playlist-list');
+            container.innerHTML = `<div class="text-center"><i class="fas fa-spinner fa-spin"></i> ${t('loading')}...</div>`;
+
+            fetch('/api/v1/playlists', {
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const playlists = data.playlists || [];
+                
+                if (playlists.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-3">
+                            <p class="text-muted">${t('no_playlists')}</p>
+                            <a href="/playlists" class="btn btn-sm btn-primary">${t('go_create')}</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = playlists.map(playlist => `
+                    <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                            onclick="addSongToPlaylist(${playlist.id})">
+                        ${playlist.name}
+                        <span class="badge badge-primary badge-pill">${playlist.song_count}</span>
+                    </button>
+                `).join('');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                container.innerHTML = `<div class="text-center text-danger">${t('load_failed')}</div>`;
+            });
+        }
+
+        function addSongToPlaylist(playlistId) {
+            if (!contextSongId) return;
+
+            fetch(`/api/v1/playlists/${playlistId}/songs`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ song_id: contextSongId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    $('#addToPlaylistModal').modal('hide');
+                    showMessage(t('add_success'), 'success');
+                    
+                    // If we are currently viewing this playlist, refresh the list
+                    if (currentPlaylistId == playlistId) {
+                        loadSongs();
+                    }
+                } else {
+                    showMessage(data.error || t('add_failed'), 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMessage(t('add_failed'), 'danger');
+            });
+        }
+    </script>
+</body>
+</html>
