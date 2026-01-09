@@ -121,6 +121,9 @@
     "confirm_delete_selected_songs": "Are you sure you want to delete the selected songs",
     "seconds": "seconds",
     "edit_song": "Edit Song",
-    "cancel": "Cancel",
-    "save": "Save"
+    "play_queue": "Play Queue",
+    "sort_queue": "Sort Queue",
+    "clear_queue": "Clear Queue",
+    "toggle_queue": "Toggle Queue",
+    "no_songs_in_queue": "No songs in queue"
 }

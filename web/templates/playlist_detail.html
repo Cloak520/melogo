@@ -46,7 +46,7 @@
     <!-- Add Song Modal -->
     <div class="modal fade" id="addSongModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content">
+            <div class="modal-content" style="background: var(--bg-color); border: 1px solid var(--glass-border); border-radius: var(--radius-lg);">
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="fas fa-plus-circle"></i> {{ call .T "add_songs" }}</h5>
                     <button type="button" class="close" data-dismiss="modal">
@@ -78,7 +78,7 @@
 
         // Load playlist detail
         function loadPlaylistDetail() {
-            fetch(`/api/v1/playlists/${playlistId}/detail`, {
+            return fetch(`/api/v1/playlists/${playlistId}/detail`, {
                 headers: {
                     'Authorization': 'Bearer ' + token
                 }
@@ -90,14 +90,17 @@
                     songsData = data.songs || [];
                     renderPlaylistInfo();
                     renderSongs();
+                    return data;
                 } else {
                     alert(t('playlist_not_found'));
                     window.location.href = '/playlists';
+                    return null;
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 showMessage(t('load_failed'), 'danger');
+                return null;
             });
         }
 
@@ -200,8 +203,10 @@
             .then(response => response.json())
             .then(data => {
                 if (data.message) {
-                    loadPlaylistDetail();
-                    loadAvailableSongs();
+                    loadPlaylistDetail()
+                        .then(() => {
+                            loadAvailableSongs();
+                        });
                 } else {
                     showMessage(data.error || t('add_failed'), 'danger');
                 }

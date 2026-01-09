@@ -29,45 +29,68 @@
         
         /* Queue Section */
         .queue-section {
-            width: 320px;
+            width: 350px;
             height: 100%;
             background: var(--glass-bg);
-            backdrop-filter: blur(12px);
+            backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
-            border-radius: var(--radius-lg);
-            padding: 20px;
+            border-radius: var(--radius-xl);
+            padding: 24px;
             display: flex;
             flex-direction: column;
-            box-shadow: var(--shadow-xl);
+            box-shadow: var(--shadow-xl), 0 0 40px rgba(14, 165, 233, 0.08);
             overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         .queue-section.collapsed {
-            width: 60px;
-            padding: 10px;
+            width: 80px;
+            padding: 20px 15px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         .queue-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 16px;
-            padding-bottom: 10px;
+            margin-bottom: 22px;
+            padding-bottom: 16px;
             border-bottom: 1px solid var(--glass-border);
+            position: relative;
+            background: linear-gradient(180deg, rgba(14, 165, 233, 0.05) 0%, transparent 100%);
+            padding-top: 4px;
+            border-radius: 8px 8px 0 0;
         }
         
         .queue-section.collapsed .queue-header {
-            margin-bottom: 10px;
-            padding-bottom: 5px;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
         }
         
         .queue-title {
-            font-size: 1.1rem;
+            font-size: 1.25rem;
             font-weight: 700;
             color: var(--text-primary);
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, var(--primary-color), rgba(139, 92, 246, 0.8));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .queue-title i {
+            color: var(--primary-color);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            font-size: 1.3rem;
+            text-shadow: 0 0 10px rgba(14, 165, 233, 0.3);
+        }
+        
+        .queue-title:hover i {
+            transform: rotate(5deg) scale(1.1);
+            text-shadow: 0 0 15px rgba(14, 165, 233, 0.5);
         }
         
         .queue-section.collapsed .queue-title {
@@ -76,56 +99,78 @@
         
         .queue-controls {
             display: flex;
-            gap: 8px;
+            gap: 6px;
+            align-items: center;
         }
         
         .queue-controls button {
-            background: transparent;
-            border: none;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             color: var(--text-secondary);
             cursor: pointer;
-            padding: 5px;
-            border-radius: var(--radius-md);
-            transition: all 0.2s;
+            padding: 10px;
+            border-radius: var(--radius-lg);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 36px;
+            height: 36px;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
         
         .queue-controls button:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--text-primary);
+            background: rgba(14, 165, 233, 0.15);
+            color: var(--primary-color);
+            border-color: rgba(14, 165, 233, 0.3);
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(14, 165, 233, 0.2);
         }
         
         .queue-section.collapsed .queue-controls {
             flex-direction: column;
-            gap: 5px;
+            gap: 8px;
         }
         
         .queue-toggle-btn {
             background: transparent;
-            border: none;
+            border: 1px solid transparent;
             color: var(--text-secondary);
             cursor: pointer;
-            padding: 5px;
+            padding: 8px;
             border-radius: var(--radius-md);
-            transition: all 0.2s;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             margin-left: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            height: 32px;
         }
         
         .queue-toggle-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.12);
             color: var(--text-primary);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
         
         .queue-content {
             flex: 1;
             overflow-y: auto;
+            padding-right: 4px;
         }
         
         .queue-section.collapsed .queue-content {
             display: none;
         }
         
+        /* Hide scrollbar */
         .queue-content::-webkit-scrollbar {
-            width: 6px;
+            width: 0;
+            height: 0;
         }
         
         .queue-content::-webkit-scrollbar-track {
@@ -133,32 +178,57 @@
         }
         
         .queue-content::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 3px;
-        }
-        
-        .queue-content::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: transparent;
         }
         
         .queue-item {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 10px;
-            border-radius: var(--radius-md);
+            gap: 14px;
+            padding: 14px 18px;
+            border-radius: var(--radius-lg);
             cursor: pointer;
-            transition: all 0.2s;
-            margin-bottom: 4px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 8px;
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(203, 213, 225, 0.1);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(4px);
+        }
+        
+        .queue-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: linear-gradient(180deg, var(--primary-color), rgba(139, 92, 246, 0.8));
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+            box-shadow: 0 0 10px rgba(14, 165, 233, 0.3);
         }
         
         .queue-item:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(30, 41, 59, 0.7);
+            border-color: rgba(14, 165, 233, 0.4);
+            box-shadow: 0 6px 18px rgba(14, 165, 233, 0.15);
+        }
+        
+        .queue-item:hover::before {
+            transform: scaleY(1);
         }
         
         .queue-item.active {
-            background: rgba(var(--primary-color-rgb), 0.2);
-            border: 1px solid rgba(var(--primary-color-rgb), 0.4);
+            background: rgba(var(--primary-color-rgb), 0.22);
+            border: 1px solid rgba(var(--primary-color-rgb), 0.55);
+            box-shadow: 0 6px 20px rgba(14, 165, 233, 0.2);
+        }
+        
+        .queue-item.active::before {
+            transform: scaleY(1);
+            box-shadow: 0 0 15px rgba(14, 165, 233, 0.5);
         }
         
         .queue-section.collapsed .queue-item {
@@ -168,58 +238,79 @@
         .queue-item-index {
             font-size: 0.85rem;
             color: var(--text-secondary);
-            width: 16px;
+            width: 18px;
             text-align: center;
+            font-weight: 500;
         }
         
         .queue-item.active .queue-item-index {
             color: var(--primary-color);
+            font-weight: 700;
         }
         
         .queue-item-info {
             flex: 1;
             min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
         }
         
         .queue-item-title {
-            font-size: 0.9rem;
-            font-weight: 500;
+            font-size: 0.92rem;
+            font-weight: 600;
             color: var(--text-primary);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            transition: color 0.2s;
+        }
+        
+        .queue-item:hover .queue-item-title {
+            color: var(--primary-color);
         }
         
         .queue-item-artist {
-            font-size: 0.8rem;
+            font-size: 0.82rem;
             color: var(--text-secondary);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            transition: color 0.2s;
+        }
+        
+        .queue-item:hover .queue-item-artist {
+            color: var(--text-primary);
         }
         
         .queue-item-duration {
-            font-size: 0.8rem;
+            font-size: 0.82rem;
             color: var(--text-secondary);
+            font-weight: 500;
         }
         
         .queue-item-remove {
             background: transparent;
-            border: none;
+            border: 1px solid transparent;
             color: var(--text-tertiary);
             cursor: pointer;
-            padding: 5px;
+            padding: 6px 8px;
             border-radius: var(--radius-sm);
-            opacity: 0.5;
-            transition: all 0.2s;
+            opacity: 0;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateX(5px);
         }
         
         .queue-item:hover .queue-item-remove {
             opacity: 1;
+            transform: translateX(0);
         }
         
         .queue-item-remove:hover {
             color: var(--danger-color);
+            background: rgba(var(--danger-color-rgb), 0.15);
+            border-color: rgba(var(--danger-color-rgb), 0.3);
+            transform: translateX(2px);
         }
         
         .empty-queue {
@@ -227,19 +318,40 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100%;
+            height: 300px;
             color: var(--text-tertiary);
-            text-align: center;
+            gap: 18px;
+            transition: all 0.4s ease;
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.03) 0%, transparent 70%);
+            border-radius: 12px;
+            padding: 20px;
         }
         
         .empty-queue i {
-            font-size: 3rem;
-            margin-bottom: 16px;
-            opacity: 0.5;
+            font-size: 4rem;
+            opacity: 0.2;
+            transition: all 0.4s ease;
+            background: linear-gradient(135deg, var(--primary-color), rgba(139, 92, 246, 0.8));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .empty-queue:hover i {
+            opacity: 0.4;
+            transform: scale(1.1) rotate(5deg);
+            text-shadow: 0 0 20px rgba(14, 165, 233, 0.3);
         }
         
         .empty-queue-text {
-            font-size: 0.9rem;
+            font-size: 1rem;
+            opacity: 0.65;
+            font-weight: 500;
+            padding: 0 25px;
+            background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         
         .queue-section.collapsed .empty-queue {
@@ -360,6 +472,30 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Right Play Queue Section -->
+            <div class="queue-section" id="queue-section">
+                <div class="queue-header">
+                    <div class="queue-title">
+                        <i class="fas fa-list-ol"></i>
+                        <span>{{ call .T "play_queue" }}</span>
+                        <span id="queue-count" style="color: var(--text-secondary); font-size: 0.9rem; font-weight: normal;">(0)</span>
+                    </div>
+                    <div class="queue-controls">
+
+                        <button onclick="clearQueue()" title="{{ call .T "clear_queue" }}">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+
+                    </div>
+                </div>
+                <div class="queue-content" id="queue-content">
+                    <div class="empty-queue">
+                        <i class="fas fa-list-ol"></i>
+                        <div class="empty-queue-text">{{ call .T "no_songs_in_queue" }}</div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Right Music List Section -->
             <div class="music-list-section">
@@ -382,34 +518,6 @@
                     <div class="loading">
                         <i class="fas fa-spinner fa-spin"></i>
                         <p>{{ call .T "loading" }}...</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Right Play Queue Section -->
-            <div class="queue-section" id="queue-section">
-                <div class="queue-header">
-                    <div class="queue-title">
-                        <i class="fas fa-list-ol"></i>
-                        <span>{{ call .T "play_queue" }}</span>
-                        <span id="queue-count" style="color: var(--text-secondary); font-size: 0.9rem; font-weight: normal;">(0)</span>
-                    </div>
-                    <div class="queue-controls">
-                        <button onclick="sortQueue()" title="{{ call .T "sort_queue" }}">
-                            <i class="fas fa-sort"></i>
-                        </button>
-                        <button onclick="clearQueue()" title="{{ call .T "clear_queue" }}">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                        <button onclick="toggleQueueCollapse()" title="{{ call .T "toggle_queue" }}">
-                            <i class="fas fa-chevron-left" id="queue-toggle-icon"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="queue-content" id="queue-content">
-                    <div class="empty-queue">
-                        <i class="fas fa-list-ol"></i>
-                        <div class="empty-queue-text">{{ call .T "no_songs_in_queue" }}</div>
                     </div>
                 </div>
             </div>
@@ -547,23 +655,7 @@
         }
 
         // Sort queue alphabetically by title
-        function sortQueue() {
-            if (playQueue.length <= 1) return;
 
-            // Get the currently playing song
-            const currentSong = currentQueueIndex >= 0 ? playQueue[currentQueueIndex] : null;
-
-            // Sort the queue by title
-            playQueue.sort((a, b) => a.title.localeCompare(b.title));
-
-            // Update currentQueueIndex if a song was playing
-            if (currentSong) {
-                currentQueueIndex = playQueue.findIndex(song => song.id === currentSong.id);
-            }
-
-            renderQueue();
-            saveQueue();
-        }
         
         // Render queue to UI
         function renderQueue() {
@@ -600,19 +692,7 @@
             }).join('');
         }
         
-        // Toggle queue collapse/expand
-        function toggleQueueCollapse() {
-            const queueSection = document.getElementById('queue-section');
-            const toggleIcon = document.getElementById('queue-toggle-icon');
-            
-            queueSection.classList.toggle('collapsed');
-            
-            if (queueSection.classList.contains('collapsed')) {
-                toggleIcon.className = 'fas fa-chevron-right';
-            } else {
-                toggleIcon.className = 'fas fa-chevron-left';
-            }
-        }
+
         
         // Play song from queue
         function playQueueSong(index) {
@@ -861,33 +941,29 @@
         async function playSong(index) {
             if (index < 0 || index >= songs.length) return;
             
-            currentSongIndex = index;
             const song = songs[index];
-            const albumCover = document.getElementById('album-cover');
             
-            document.getElementById('current-song-title').textContent = song.title;
-            document.getElementById('current-song-artist').textContent = song.artist;
+            // Remove if already in queue
+            const existingIndex = playQueue.findIndex(item => item.id === song.id);
+            if (existingIndex !== -1) {
+                playQueue.splice(existingIndex, 1);
+                if (existingIndex < currentQueueIndex) {
+                    currentQueueIndex--;
+                } else if (existingIndex === currentQueueIndex) {
+                    currentQueueIndex = -1;
+                }
+            }
             
-            // Update album cover (using the new endpoint)
-            updateAlbumCover(song);
+            // Add to top of queue
+            playQueue.unshift({ ...song });
             
-            // Load lyrics
-            loadLyrics(song.id);
+            // Play the song
+            playQueueSong(0);
             
-            audioPlayer.src = `/api/v1/songs/${song.id}/stream`;
-            
-            // Reset rotation before starting new song
-            albumCover.classList.remove('rotating', 'paused');
-            
-            // Force a reflow to ensure the animation restarts from the beginning
-            void albumCover.offsetWidth;
-            
-            audioPlayer.play();
-            isPlaying = true;
-            
-            document.getElementById('play-icon').className = 'fas fa-pause';
-            startRotation();
+            // Update UI
             renderMusicList();
+            renderQueue();
+            saveQueue();
         }
         
         // Update album cover
@@ -1041,13 +1117,12 @@
         // Reset rotation
         function resetRotation() {
             const albumCover = document.getElementById('album-cover');
-            albumCover.classList.remove('rotating', 'paused');
+            albumCover.classList.remove('rotating');
         }
         
         // Toggle play/pause
         function togglePlay() {
             const albumCover = document.getElementById('album-cover');
-            
             if ((currentSongIndex === -1 && !isQueueActive) && songs.length > 0) {
                 // No song playing and queue not active - play first song or random
                 if (currentRepeatMode === REPEAT_MODE.RANDOM) {
@@ -1070,6 +1145,9 @@
                 isPlaying = true;
                 document.getElementById('play-icon').className = 'fas fa-pause';
                 albumCover.classList.remove('paused');
+                if (!albumCover.classList.contains('rotating')) {
+                    albumCover.classList.add('rotating');
+                }
             }
         }
 
@@ -1151,27 +1229,28 @@
             resetRotation();
             
             // Reset song info display
-            document.getElementById('current-song-title').textContent = t('select_song_to_play');
-            document.getElementById('current-song-artist').textContent = 'MeloGo';
+            // document.getElementById('current-song-title').textContent = t('select_song_to_play');
+            // document.getElementById('current-song-artist').textContent = 'MeloGo';
             
             // Reset progress bar
             document.getElementById('progress-fill').style.width = '0%';
             document.getElementById('current-time').textContent = '0:00';
-            document.getElementById('total-time').textContent = '0:00';
+            isPlaying = false;
+            // document.getElementById('total-time').textContent = '0:00';
             
             // Reset album cover
-            const albumCover = document.getElementById('album-cover');
-            albumCover.innerHTML = '<img src="/assets/images/MeloGo.png" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">';
+            // const albumCover = document.getElementById('album-cover');
+            // albumCover.innerHTML = '<img src="/assets/images/MeloGo.png" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">';
             
             // Reset lyrics
-            const lyricsContainer = document.getElementById('lyrics-container');
-            lyricsContainer.innerHTML = `<div class="no-lyrics">${t('no_lyrics')}</div>`;
+            // const lyricsContainer = document.getElementById('lyrics-container');
+            // lyricsContainer.innerHTML = `<div class="no-lyrics">${t('no_lyrics')}</div>`;
             
             // Reset current song index
-            currentSongIndex = -1;
+            // currentSongIndex = -1;
             
             // Update music list to remove active class
-            renderMusicList();
+            // renderMusicList();
         }
 
         // Format duration
@@ -1474,9 +1553,6 @@
             let html = `
                 <li onclick="openAddToPlaylistModal()">
                     <i class="fas fa-plus-circle"></i> ${t('add_to_playlist')}
-                </li>
-                <li onclick="addToQueueFromMenu()">
-                    <i class="fas fa-list-plus"></i> ${t('add_to_queue')}
                 </li>
                 <li onclick="addToQueueFromMenu(true)">
                     <i class="fas fa-play-circle"></i> ${t('play_next_in_queue')}

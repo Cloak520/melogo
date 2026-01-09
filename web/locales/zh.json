@@ -121,6 +121,9 @@
     "confirm_delete_selected_songs": "确定要删除选中的歌曲吗",
     "seconds": "秒",
     "edit_song": "编辑歌曲",
-    "cancel": "取消",
-    "save": "保存"
+    "play_queue": "播放队列",
+    "sort_queue": "排序队列",
+    "clear_queue": "清空队列",
+    "toggle_queue": "切换队列",
+    "no_songs_in_queue": "队列中没有歌曲"
 }

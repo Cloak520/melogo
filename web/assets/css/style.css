@@ -204,7 +204,7 @@ body.auth-page::after {
 
 .form-control-custom {
     border-radius: var(--radius-lg);
-    padding: 14px 18px;
+    padding: 0px 18px;
     border: 2px solid rgba(203, 213, 225, 0.3);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     background: var(--glass-bg);
